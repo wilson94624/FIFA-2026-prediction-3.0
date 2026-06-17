@@ -1,0 +1,2291 @@
+[
+  {
+    "id": "1",
+    "home_team_name_en": "Mexico",
+    "away_team_name_en": "South Africa",
+    "home_score": "2",
+    "away_score": "0",
+    "home_scorers": "{“J. Quiñones 9'”,”R. Jiménez 67'”}",
+    "away_scorers": "null",
+    "finished": "TRUE",
+    "time_elapsed": "finished",
+    "type": "group",
+    "group": "A",
+    "local_date": "06/11/2026 13:00",
+    "home_team_label": null,
+    "away_team_label": null,
+    "stats": {
+      "possessionA": 60,
+      "possessionB": 40,
+      "shotsA": 16,
+      "shotsB": 3,
+      "foulsA": 12,
+      "foulsB": 11,
+      "unavailable_players": {
+        "home": [],
+        "away": []
+      }
+    }
+  },
+  {
+    "id": "2",
+    "home_team_name_en": "South Korea",
+    "away_team_name_en": "Czechia",
+    "home_score": "2",
+    "away_score": "1",
+    "home_scorers": "{\"I.B. Hwang 67'\",\"H.G. Oh 80'\"}",
+    "away_scorers": "{\"L. Krejčí 59'\"}",
+    "finished": "TRUE",
+    "time_elapsed": "finished",
+    "type": "group",
+    "group": "A",
+    "local_date": "06/11/2026 20:00",
+    "home_team_label": null,
+    "away_team_label": null,
+    "stats": {
+      "possessionA": 62,
+      "possessionB": 38,
+      "shotsA": 15,
+      "shotsB": 7,
+      "foulsA": 9,
+      "foulsB": 16,
+      "unavailable_players": {
+        "home": [],
+        "away": []
+      }
+    }
+  },
+  {
+    "id": "3",
+    "home_team_name_en": "Canada",
+    "away_team_name_en": "Bosnia and Herzegovina",
+    "home_score": "1",
+    "away_score": "1",
+    "home_scorers": "{\"C. Larin 11'\"}",
+    "away_scorers": "{\"Jovo Lukić 21'\"}",
+    "finished": "TRUE",
+    "time_elapsed": "finished",
+    "type": "group",
+    "group": "B",
+    "local_date": "06/12/2026 15:00",
+    "home_team_label": null,
+    "away_team_label": null,
+    "stats": {
+      "possessionA": 61,
+      "possessionB": 39,
+      "shotsA": 13,
+      "shotsB": 8,
+      "foulsA": 10,
+      "foulsB": 20,
+      "unavailable_players": {
+        "home": [],
+        "away": []
+      }
+    }
+  },
+  {
+    "id": "4",
+    "home_team_name_en": "USA",
+    "away_team_name_en": "Paraguay",
+    "home_score": "4",
+    "away_score": "1",
+    "home_scorers": "{\"D. Bobadilla 7'(OG)\",\"F. Balogun 31'\",\"F. Balogun 45'+5'\",\"G. Reyna 90'+8'\"}",
+    "away_scorers": "{\"Maurício 73'\"}",
+    "finished": "TRUE",
+    "time_elapsed": "finished",
+    "type": "group",
+    "group": "D",
+    "local_date": "06/12/2026 18:00",
+    "home_team_label": null,
+    "away_team_label": null,
+    "stats": {
+      "possessionA": 65,
+      "possessionB": 35,
+      "shotsA": 16,
+      "shotsB": 9,
+      "foulsA": 13,
+      "foulsB": 17,
+      "unavailable_players": {
+        "home": [],
+        "away": []
+      }
+    }
+  },
+  {
+    "id": "5",
+    "home_team_name_en": "Haiti",
+    "away_team_name_en": "Scotland",
+    "home_score": "0",
+    "away_score": "1",
+    "home_scorers": "null",
+    "away_scorers": "{\"J. McGinn 28'\"}",
+    "finished": "TRUE",
+    "time_elapsed": "finished",
+    "type": "group",
+    "group": "C",
+    "local_date": "06/13/2026 21:00",
+    "home_team_label": null,
+    "away_team_label": null,
+    "stats": {
+      "possessionA": 54,
+      "possessionB": 46,
+      "shotsA": 15,
+      "shotsB": 9,
+      "foulsA": 23,
+      "foulsB": 21,
+      "unavailable_players": {
+        "home": [],
+        "away": []
+      }
+    }
+  },
+  {
+    "id": "6",
+    "home_team_name_en": "Australia",
+    "away_team_name_en": "Turkey",
+    "home_score": "2",
+    "away_score": "0",
+    "home_scorers": "{\"Nestory Irankunda 27'\",\"C. Metcalfe 75'\"}",
+    "away_scorers": "null",
+    "finished": "TRUE",
+    "time_elapsed": "finished",
+    "type": "group",
+    "group": "D",
+    "local_date": "06/13/2026 21:00",
+    "home_team_label": null,
+    "away_team_label": null,
+    "stats": {
+      "possessionA": 28,
+      "possessionB": 72,
+      "shotsA": 9,
+      "shotsB": 30,
+      "foulsA": 12,
+      "foulsB": 4,
+      "unavailable_players": {
+        "home": [],
+        "away": []
+      }
+    }
+  },
+  {
+    "id": "7",
+    "home_team_name_en": "Brazil",
+    "away_team_name_en": "Morocco",
+    "home_score": "1",
+    "away_score": "1",
+    "home_scorers": "{\"V. Júnior 32'\"}",
+    "away_scorers": "{\"I. Saibari 21'\"}",
+    "finished": "TRUE",
+    "time_elapsed": "finished",
+    "type": "group",
+    "group": "C",
+    "local_date": "06/13/2026 18:00",
+    "home_team_label": null,
+    "away_team_label": null,
+    "stats": {
+      "possessionA": 51,
+      "possessionB": 49,
+      "shotsA": 12,
+      "shotsB": 14,
+      "foulsA": 16,
+      "foulsB": 14,
+      "unavailable_players": {
+        "home": [],
+        "away": []
+      }
+    }
+  },
+  {
+    "id": "8",
+    "home_team_name_en": "Qatar",
+    "away_team_name_en": "Switzerland",
+    "home_score": "1",
+    "away_score": "1",
+    "home_scorers": "{\"B. Khoukhi 90'+5'\"}",
+    "away_scorers": "{\"Breel Embolo 17' (p)\"}",
+    "finished": "TRUE",
+    "time_elapsed": "finished",
+    "type": "group",
+    "group": "B",
+    "local_date": "06/13/2026 12:00",
+    "home_team_label": null,
+    "away_team_label": null,
+    "stats": {
+      "possessionA": 32,
+      "possessionB": 68,
+      "shotsA": 6,
+      "shotsB": 26,
+      "foulsA": 12,
+      "foulsB": 11,
+      "unavailable_players": {
+        "home": [],
+        "away": []
+      }
+    }
+  },
+  {
+    "id": "9",
+    "home_team_name_en": "Ivory Coast",
+    "away_team_name_en": "Ecuador",
+    "home_score": "1",
+    "away_score": "0",
+    "home_scorers": "{\"A. Diallo 90'\"}",
+    "away_scorers": "null",
+    "finished": "TRUE",
+    "time_elapsed": "finished",
+    "type": "group",
+    "group": "E",
+    "local_date": "06/14/2026 19:00",
+    "home_team_label": null,
+    "away_team_label": null,
+    "stats": {
+      "possessionA": 48,
+      "possessionB": 52,
+      "shotsA": 15,
+      "shotsB": 12,
+      "foulsA": 10,
+      "foulsB": 13,
+      "unavailable_players": {
+        "home": [],
+        "away": []
+      }
+    }
+  },
+  {
+    "id": "10",
+    "home_team_name_en": "Germany",
+    "away_team_name_en": "Curacao",
+    "home_score": "7",
+    "away_score": "1",
+    "home_scorers": "{\"Felix Nmecha 7'\",\"N. Schlotterbeck 38'\",\"K. Havertz 45'+5'(p)\",\"J. Musiala 47'\",\"N. Brown 68'\",\"D. Undav 78'\",\"K. Havertz 88'\"}",
+    "away_scorers": "{\"L. Comenencia 21'\"}",
+    "finished": "TRUE",
+    "time_elapsed": "finished",
+    "type": "group",
+    "group": "E",
+    "local_date": "06/14/2026 12:00",
+    "home_team_label": null,
+    "away_team_label": null,
+    "stats": {
+      "possessionA": 65,
+      "possessionB": 35,
+      "shotsA": 26,
+      "shotsB": 8,
+      "foulsA": 18,
+      "foulsB": 11,
+      "unavailable_players": {
+        "home": [],
+        "away": []
+      }
+    }
+  },
+  {
+    "id": "11",
+    "home_team_name_en": "Netherlands",
+    "away_team_name_en": "Japan",
+    "home_score": "2",
+    "away_score": "2",
+    "home_scorers": "{\"Virgil van Dijk 51'\",\"C. Summerville 64'\"}",
+    "away_scorers": "{\"K. Nakamura 57'\",\"K. Ogawa 89'\"}",
+    "finished": "TRUE",
+    "time_elapsed": "finished",
+    "type": "group",
+    "group": "F",
+    "local_date": "06/14/2026 15:00",
+    "home_team_label": null,
+    "away_team_label": null,
+    "stats": {
+      "possessionA": 60,
+      "possessionB": 40,
+      "shotsA": 10,
+      "shotsB": 10,
+      "foulsA": 7,
+      "foulsB": 7,
+      "unavailable_players": {
+        "home": [],
+        "away": []
+      }
+    }
+  },
+  {
+    "id": "12",
+    "home_team_name_en": "Sweden",
+    "away_team_name_en": "Tunisia",
+    "home_score": "5",
+    "away_score": "1",
+    "home_scorers": "{\"Y.Ayari 7'\",\"A. Isak 30'\",\"V. Gyökeres 59'\",\"M. Svanberg 84'\",\"Y.Ayari 90'+6'\"}",
+    "away_scorers": "{\"O. Rekik 43'\"}",
+    "finished": "TRUE",
+    "time_elapsed": "finished",
+    "type": "group",
+    "group": "F",
+    "local_date": "06/14/2026 20:00",
+    "home_team_label": null,
+    "away_team_label": null,
+    "stats": {
+      "possessionA": 49,
+      "possessionB": 51,
+      "shotsA": 13,
+      "shotsB": 6,
+      "foulsA": 10,
+      "foulsB": 8,
+      "unavailable_players": {
+        "home": [],
+        "away": []
+      }
+    }
+  },
+  {
+    "id": "13",
+    "home_team_name_en": "Iran",
+    "away_team_name_en": "New Zealand",
+    "home_score": "2",
+    "away_score": "2",
+    "home_scorers": "{\"Ramin Rezaiian 32'\",\"Mohammad Mohebi 64'\"}",
+    "away_scorers": "{\"Elijah Just 7'\",\"Elijah Just 54'\"}",
+    "finished": "TRUE",
+    "time_elapsed": "finished",
+    "type": "group",
+    "group": "G",
+    "local_date": "06/15/2026 18:00",
+    "home_team_label": null,
+    "away_team_label": null,
+    "stats": {
+      "possessionA": 48,
+      "possessionB": 52,
+      "shotsA": 17,
+      "shotsB": 14,
+      "foulsA": 10,
+      "foulsB": 8,
+      "unavailable_players": {
+        "home": [],
+        "away": []
+      }
+    }
+  },
+  {
+    "id": "14",
+    "home_team_name_en": "Spain",
+    "away_team_name_en": "Cabo Verde",
+    "home_score": "0",
+    "away_score": "0",
+    "home_scorers": "null",
+    "away_scorers": "null",
+    "finished": "TRUE",
+    "time_elapsed": "finished",
+    "type": "group",
+    "group": "H",
+    "local_date": "06/15/2026 12:00",
+    "home_team_label": null,
+    "away_team_label": null,
+    "stats": {
+      "possessionA": 74,
+      "possessionB": 26,
+      "shotsA": 27,
+      "shotsB": 6,
+      "foulsA": 10,
+      "foulsB": 1,
+      "unavailable_players": {
+        "home": [],
+        "away": []
+      }
+    }
+  },
+  {
+    "id": "15",
+    "home_team_name_en": "Belgium",
+    "away_team_name_en": "Egypt",
+    "home_score": "1",
+    "away_score": "1",
+    "home_scorers": "{\"Mohamed Hany 66'\"}",
+    "away_scorers": "{\"Emam Ashour 20'\"}",
+    "finished": "TRUE",
+    "time_elapsed": "finished",
+    "type": "group",
+    "group": "G",
+    "local_date": "06/15/2026 12:00",
+    "home_team_label": null,
+    "away_team_label": null,
+    "stats": {
+      "possessionA": 54,
+      "possessionB": 46,
+      "shotsA": 15,
+      "shotsB": 14,
+      "foulsA": 15,
+      "foulsB": 15,
+      "unavailable_players": {
+        "home": [],
+        "away": []
+      }
+    }
+  },
+  {
+    "id": "16",
+    "home_team_name_en": "Saudi Arabia",
+    "away_team_name_en": "Uruguay",
+    "home_score": "1",
+    "away_score": "1",
+    "home_scorers": "{\"Abdulelah Al-Amri 41'\"}",
+    "away_scorers": "{\"Maximiliano Araújo 80'\"}",
+    "finished": "TRUE",
+    "time_elapsed": "finished",
+    "type": "group",
+    "group": "H",
+    "local_date": "06/15/2026 18:00",
+    "home_team_label": null,
+    "away_team_label": null,
+    "stats": {
+      "possessionA": 33,
+      "possessionB": 67,
+      "shotsA": 7,
+      "shotsB": 27,
+      "foulsA": 11,
+      "foulsB": 6,
+      "unavailable_players": {
+        "home": [],
+        "away": []
+      }
+    }
+  },
+  {
+    "id": "17",
+    "home_team_name_en": "France",
+    "away_team_name_en": "Senegal",
+    "home_score": "3",
+    "away_score": "1",
+    "home_scorers": "{\"K. Mbappé 66'\",\"B. Barcola 82'\",\"K. Mbappé 90+6'\"}",
+    "away_scorers": "{\"I. Mbaye 90+5'\"}",
+    "finished": "TRUE",
+    "time_elapsed": "finished",
+    "type": "group",
+    "group": "I",
+    "local_date": "06/16/2026 15:00",
+    "home_team_label": null,
+    "away_team_label": null,
+    "stats": {
+      "possessionA": 53,
+      "possessionB": 47,
+      "shotsA": 11,
+      "shotsB": 6,
+      "foulsA": 5,
+      "foulsB": 9,
+      "unavailable_players": {
+        "home": [],
+        "away": []
+      }
+    }
+  },
+  {
+    "id": "18",
+    "home_team_name_en": "Iraq",
+    "away_team_name_en": "Norway",
+    "home_score": "1",
+    "away_score": "4",
+    "home_scorers": "{\"Aymen Hussein 39'\"}",
+    "away_scorers": "{\"Erling Haaland 29'\",\"Erling Haaland 43'\",\"Leo Østigård 76'\",\"Aymen Hussein 90+7'\"}",
+    "finished": "TRUE",
+    "time_elapsed": "finished",
+    "type": "group",
+    "group": "I",
+    "local_date": "06/16/2026 18:00",
+    "home_team_label": null,
+    "away_team_label": null,
+    "stats": {
+      "possessionA": 39,
+      "possessionB": 61,
+      "shotsA": 11,
+      "shotsB": 12,
+      "foulsA": 12,
+      "foulsB": 13,
+      "unavailable_players": {
+        "home": [],
+        "away": []
+      }
+    }
+  },
+  {
+    "id": "19",
+    "home_team_name_en": "Argentina",
+    "away_team_name_en": "Algeria",
+    "home_score": "3",
+    "away_score": "0",
+    "home_scorers": "{\"Lionel Messi 17'\",\"Lionel Messi 60'\",\"Lionel Messi 76'\"}",
+    "away_scorers": "null",
+    "finished": "TRUE",
+    "time_elapsed": "finished",
+    "type": "group",
+    "group": "J",
+    "local_date": "06/16/2026 20:00",
+    "home_team_label": null,
+    "away_team_label": null,
+    "stats": {
+      "possessionA": 48,
+      "possessionB": 52,
+      "shotsA": 10,
+      "shotsB": 7,
+      "foulsA": 13,
+      "foulsB": 8,
+      "unavailable_players": {
+        "home": [],
+        "away": []
+      }
+    }
+  },
+  {
+    "id": "20",
+    "home_team_name_en": "Austria",
+    "away_team_name_en": "Jordan",
+    "home_score": "3",
+    "away_score": "1",
+    "home_scorers": "{\"Rvmanv Ashmid 21'\",\"Izn Alarb 76'\"}",
+    "away_scorers": "{\"Ali Avlvan 50'\"}",
+    "finished": "TRUE",
+    "time_elapsed": "finished",
+    "type": "group",
+    "group": "J",
+    "local_date": "06/16/2026 21:00",
+    "home_team_label": null,
+    "away_team_label": null,
+    "stats": {
+      "possessionA": 63,
+      "possessionB": 37,
+      "shotsA": 11,
+      "shotsB": 11,
+      "foulsA": 12,
+      "foulsB": 7,
+      "unavailable_players": {
+        "home": [],
+        "away": []
+      }
+    }
+  },
+  {
+    "id": "21",
+    "home_team_name_en": "Portugal",
+    "away_team_name_en": "Congo DR",
+    "home_score": "1",
+    "away_score": "1",
+    "home_scorers": "{\"J. Neves 6'\"}",
+    "away_scorers": "{\"Y. Wissa 45+5'\"}",
+    "finished": "TRUE",
+    "time_elapsed": "Finished",
+    "type": "group",
+    "group": "K",
+    "local_date": "06/17/2026 12:00",
+    "home_team_label": null,
+    "away_team_label": null,
+    "stats": {
+      "possessionA": 75,
+      "possessionB": 25,
+      "shotsA": 7,
+      "shotsB": 8,
+      "foulsA": 9,
+      "foulsB": 10,
+      "unavailable_players": {
+        "home": [],
+        "away": []
+      }
+    }
+  },
+  {
+    "id": "22",
+    "home_team_name_en": "England",
+    "away_team_name_en": "Croatia",
+    "home_score": "null",
+    "away_score": "null",
+    "home_scorers": "null",
+    "away_scorers": "null",
+    "finished": "FALSE",
+    "time_elapsed": "notstarted",
+    "type": "group",
+    "group": "L",
+    "local_date": "06/17/2026 15:00",
+    "home_team_label": null,
+    "away_team_label": null,
+    "stats": {
+      "possessionA": null,
+      "possessionB": null,
+      "shotsA": null,
+      "shotsB": null,
+      "foulsA": null,
+      "foulsB": null,
+      "unavailable_players": {
+        "home": [],
+        "away": []
+      }
+    }
+  },
+  {
+    "id": "23",
+    "home_team_name_en": "Uzbekistan",
+    "away_team_name_en": "Colombia",
+    "home_score": "null",
+    "away_score": "null",
+    "home_scorers": "null",
+    "away_scorers": "null",
+    "finished": "FALSE",
+    "time_elapsed": "notstarted",
+    "type": "group",
+    "group": "K",
+    "local_date": "06/17/2026 20:00",
+    "home_team_label": null,
+    "away_team_label": null,
+    "stats": {
+      "possessionA": null,
+      "possessionB": null,
+      "shotsA": null,
+      "shotsB": null,
+      "foulsA": null,
+      "foulsB": null,
+      "unavailable_players": {
+        "home": [
+          {
+            "name": "Jaloliddin Masharipov",
+            "type": "injury"
+          }
+        ],
+        "away": []
+      }
+    }
+  },
+  {
+    "id": "24",
+    "home_team_name_en": "Ghana",
+    "away_team_name_en": "Panama",
+    "home_score": "null",
+    "away_score": "null",
+    "home_scorers": "null",
+    "away_scorers": "null",
+    "finished": "FALSE",
+    "time_elapsed": "notstarted",
+    "type": "group",
+    "group": "L",
+    "local_date": "06/17/2026 19:00",
+    "home_team_label": null,
+    "away_team_label": null,
+    "stats": {
+      "possessionA": null,
+      "possessionB": null,
+      "shotsA": null,
+      "shotsB": null,
+      "foulsA": null,
+      "foulsB": null,
+      "unavailable_players": {
+        "home": [],
+        "away": []
+      }
+    }
+  },
+  {
+    "id": "25",
+    "home_team_name_en": "Mexico",
+    "away_team_name_en": "South Korea",
+    "home_score": "0",
+    "away_score": "0",
+    "home_scorers": "null",
+    "away_scorers": "null",
+    "finished": "FALSE",
+    "time_elapsed": "notstarted",
+    "type": "group",
+    "group": "A",
+    "local_date": "06/18/2026 19:00",
+    "home_team_label": null,
+    "away_team_label": null,
+    "stats": {
+      "possessionA": null,
+      "possessionB": null,
+      "shotsA": null,
+      "shotsB": null,
+      "foulsA": null,
+      "foulsB": null,
+      "unavailable_players": {
+        "home": [
+          {
+            "name": "César Montes",
+            "type": "suspension"
+          }
+        ],
+        "away": []
+      }
+    }
+  },
+  {
+    "id": "26",
+    "home_team_name_en": "Switzerland",
+    "away_team_name_en": "Bosnia and Herzegovina",
+    "home_score": "0",
+    "away_score": "0",
+    "home_scorers": "null",
+    "away_scorers": "null",
+    "finished": "FALSE",
+    "time_elapsed": "notstarted",
+    "type": "group",
+    "group": "B",
+    "local_date": "06/18/2026 12:00",
+    "home_team_label": null,
+    "away_team_label": null,
+    "stats": {
+      "possessionA": null,
+      "possessionB": null,
+      "shotsA": null,
+      "shotsB": null,
+      "foulsA": null,
+      "foulsB": null,
+      "unavailable_players": {
+        "home": [
+          {
+            "name": "Miro Muheim",
+            "type": "injury"
+          }
+        ],
+        "away": [
+          {
+            "name": "Haris Tabakovic",
+            "type": "injury"
+          }
+        ]
+      }
+    }
+  },
+  {
+    "id": "27",
+    "home_team_name_en": "Canada",
+    "away_team_name_en": "Qatar",
+    "home_score": "0",
+    "away_score": "0",
+    "home_scorers": "null",
+    "away_scorers": "null",
+    "finished": "FALSE",
+    "time_elapsed": "notstarted",
+    "type": "group",
+    "group": "B",
+    "local_date": "06/18/2026 15:00",
+    "home_team_label": null,
+    "away_team_label": null,
+    "stats": {
+      "possessionA": null,
+      "possessionB": null,
+      "shotsA": null,
+      "shotsB": null,
+      "foulsA": null,
+      "foulsB": null,
+      "unavailable_players": {
+        "home": [
+          {
+            "name": "Alphonso Davies",
+            "type": "injury"
+          }
+        ],
+        "away": []
+      }
+    }
+  },
+  {
+    "id": "28",
+    "home_team_name_en": "Czechia",
+    "away_team_name_en": "South Africa",
+    "home_score": "0",
+    "away_score": "0",
+    "home_scorers": "null",
+    "away_scorers": "null",
+    "finished": "FALSE",
+    "time_elapsed": "notstarted",
+    "type": "group",
+    "group": "A",
+    "local_date": "06/18/2026 12:00",
+    "home_team_label": null,
+    "away_team_label": null,
+    "stats": {
+      "possessionA": null,
+      "possessionB": null,
+      "shotsA": null,
+      "shotsB": null,
+      "foulsA": null,
+      "foulsB": null,
+      "unavailable_players": {
+        "home": [
+          {
+            "name": "Jan Kuchta",
+            "type": "injury"
+          }
+        ],
+        "away": [
+          {
+            "name": "Sphephelo Sithole",
+            "type": "suspension"
+          },
+          {
+            "name": "Themba Zwane",
+            "type": "suspension"
+          }
+        ]
+      }
+    }
+  },
+  {
+    "id": "29",
+    "home_team_name_en": "Brazil",
+    "away_team_name_en": "Haiti",
+    "home_score": "0",
+    "away_score": "0",
+    "home_scorers": "null",
+    "away_scorers": "null",
+    "finished": "FALSE",
+    "time_elapsed": "notstarted",
+    "type": "group",
+    "group": "C",
+    "local_date": "06/19/2026 21:00",
+    "home_team_label": null,
+    "away_team_label": null,
+    "stats": {
+      "possessionA": null,
+      "possessionB": null,
+      "shotsA": null,
+      "shotsB": null,
+      "foulsA": null,
+      "foulsB": null,
+      "unavailable_players": {
+        "home": [
+          {
+            "name": "Neymar",
+            "type": "injury"
+          }
+        ],
+        "away": []
+      }
+    }
+  },
+  {
+    "id": "30",
+    "home_team_name_en": "Scotland",
+    "away_team_name_en": "Morocco",
+    "home_score": "0",
+    "away_score": "0",
+    "home_scorers": "null",
+    "away_scorers": "null",
+    "finished": "FALSE",
+    "time_elapsed": "notstarted",
+    "type": "group",
+    "group": "C",
+    "local_date": "06/19/2026 18:00",
+    "home_team_label": null,
+    "away_team_label": null,
+    "stats": {
+      "possessionA": null,
+      "possessionB": null,
+      "shotsA": null,
+      "shotsB": null,
+      "foulsA": null,
+      "foulsB": null,
+      "unavailable_players": {
+        "home": [
+          {
+            "name": "Scott McKenna",
+            "type": "injury"
+          }
+        ],
+        "away": []
+      }
+    }
+  },
+  {
+    "id": "31",
+    "home_team_name_en": "USA",
+    "away_team_name_en": "Australia",
+    "home_score": "0",
+    "away_score": "0",
+    "home_scorers": "null",
+    "away_scorers": "null",
+    "finished": "FALSE",
+    "time_elapsed": "notstarted",
+    "type": "group",
+    "group": "D",
+    "local_date": "06/19/2026 12:00",
+    "home_team_label": null,
+    "away_team_label": null,
+    "stats": {
+      "possessionA": null,
+      "possessionB": null,
+      "shotsA": null,
+      "shotsB": null,
+      "foulsA": null,
+      "foulsB": null,
+      "unavailable_players": {
+        "home": [
+          {
+            "name": "Christian Pulisic",
+            "type": "injury"
+          }
+        ],
+        "away": []
+      }
+    }
+  },
+  {
+    "id": "32",
+    "home_team_name_en": "Turkey",
+    "away_team_name_en": "Paraguay",
+    "home_score": "0",
+    "away_score": "0",
+    "home_scorers": "null",
+    "away_scorers": "null",
+    "finished": "FALSE",
+    "time_elapsed": "notstarted",
+    "type": "group",
+    "group": "D",
+    "local_date": "06/19/2026 20:00",
+    "home_team_label": null,
+    "away_team_label": null,
+    "stats": {
+      "possessionA": null,
+      "possessionB": null,
+      "shotsA": null,
+      "shotsB": null,
+      "foulsA": null,
+      "foulsB": null,
+      "unavailable_players": {
+        "home": [],
+        "away": []
+      }
+    }
+  },
+  {
+    "id": "33",
+    "home_team_name_en": "Germany",
+    "away_team_name_en": "Ivory Coast",
+    "home_score": "0",
+    "away_score": "0",
+    "home_scorers": "null",
+    "away_scorers": "null",
+    "finished": "FALSE",
+    "time_elapsed": "notstarted",
+    "type": "group",
+    "group": "E",
+    "local_date": "06/20/2026 16:00",
+    "home_team_label": null,
+    "away_team_label": null,
+    "stats": {
+      "possessionA": null,
+      "possessionB": null,
+      "shotsA": null,
+      "shotsB": null,
+      "foulsA": null,
+      "foulsB": null,
+      "unavailable_players": {
+        "home": [],
+        "away": [
+          {
+            "name": "Evan NDicka",
+            "type": "injury"
+          }
+        ]
+      }
+    }
+  },
+  {
+    "id": "34",
+    "home_team_name_en": "Ecuador",
+    "away_team_name_en": "Curacao",
+    "home_score": "0",
+    "away_score": "0",
+    "home_scorers": "null",
+    "away_scorers": "null",
+    "finished": "FALSE",
+    "time_elapsed": "notstarted",
+    "type": "group",
+    "group": "E",
+    "local_date": "06/20/2026 19:00",
+    "home_team_label": null,
+    "away_team_label": null,
+    "stats": {
+      "possessionA": null,
+      "possessionB": null,
+      "shotsA": null,
+      "shotsB": null,
+      "foulsA": null,
+      "foulsB": null,
+      "unavailable_players": {
+        "home": [],
+        "away": []
+      }
+    }
+  },
+  {
+    "id": "35",
+    "home_team_name_en": "Netherlands",
+    "away_team_name_en": "Sweden",
+    "home_score": "0",
+    "away_score": "0",
+    "home_scorers": "null",
+    "away_scorers": "null",
+    "finished": "FALSE",
+    "time_elapsed": "notstarted",
+    "type": "group",
+    "group": "F",
+    "local_date": "06/20/2026 12:00",
+    "home_team_label": null,
+    "away_team_label": null,
+    "stats": {
+      "possessionA": null,
+      "possessionB": null,
+      "shotsA": null,
+      "shotsB": null,
+      "foulsA": null,
+      "foulsB": null,
+      "unavailable_players": {
+        "home": [
+          {
+            "name": "Jan Paul van Hecke",
+            "type": "injury"
+          },
+          {
+            "name": "Ryan Gravenberch",
+            "type": "injury"
+          }
+        ],
+        "away": [
+          {
+            "name": "Gabriel Gudmundsson",
+            "type": "injury"
+          }
+        ]
+      }
+    }
+  },
+  {
+    "id": "36",
+    "home_team_name_en": "Tunisia",
+    "away_team_name_en": "Japan",
+    "home_score": "0",
+    "away_score": "0",
+    "home_scorers": "null",
+    "away_scorers": "null",
+    "finished": "FALSE",
+    "time_elapsed": "notstarted",
+    "type": "group",
+    "group": "F",
+    "local_date": "06/20/2026 22:00",
+    "home_team_label": null,
+    "away_team_label": null,
+    "stats": {
+      "possessionA": null,
+      "possessionB": null,
+      "shotsA": null,
+      "shotsB": null,
+      "foulsA": null,
+      "foulsB": null,
+      "unavailable_players": {
+        "home": [],
+        "away": [
+          {
+            "name": "Takefusa Kubo",
+            "type": "injury"
+          }
+        ]
+      }
+    }
+  },
+  {
+    "id": "37",
+    "home_team_name_en": "Belgium",
+    "away_team_name_en": "Iran",
+    "home_score": "0",
+    "away_score": "0",
+    "home_scorers": "null",
+    "away_scorers": "null",
+    "finished": "FALSE",
+    "time_elapsed": "notstarted",
+    "type": "group",
+    "group": "G",
+    "local_date": "06/21/2026 12:00",
+    "home_team_label": null,
+    "away_team_label": null,
+    "stats": {
+      "possessionA": null,
+      "possessionB": null,
+      "shotsA": null,
+      "shotsB": null,
+      "foulsA": null,
+      "foulsB": null,
+      "unavailable_players": {
+        "home": [
+          {
+            "name": "Zeno Debast",
+            "type": "injury"
+          }
+        ],
+        "away": []
+      }
+    }
+  },
+  {
+    "id": "38",
+    "home_team_name_en": "New Zealand",
+    "away_team_name_en": "Egypt",
+    "home_score": "0",
+    "away_score": "0",
+    "home_scorers": "null",
+    "away_scorers": "null",
+    "finished": "FALSE",
+    "time_elapsed": "notstarted",
+    "type": "group",
+    "group": "G",
+    "local_date": "06/21/2026 18:00",
+    "home_team_label": null,
+    "away_team_label": null,
+    "stats": {
+      "possessionA": null,
+      "possessionB": null,
+      "shotsA": null,
+      "shotsB": null,
+      "foulsA": null,
+      "foulsB": null,
+      "unavailable_players": {
+        "home": [],
+        "away": []
+      }
+    }
+  },
+  {
+    "id": "39",
+    "home_team_name_en": "Spain",
+    "away_team_name_en": "Saudi Arabia",
+    "home_score": "0",
+    "away_score": "0",
+    "home_scorers": "null",
+    "away_scorers": "null",
+    "finished": "FALSE",
+    "time_elapsed": "notstarted",
+    "type": "group",
+    "group": "H",
+    "local_date": "06/21/2026 12:00",
+    "home_team_label": null,
+    "away_team_label": null,
+    "stats": {
+      "possessionA": null,
+      "possessionB": null,
+      "shotsA": null,
+      "shotsB": null,
+      "foulsA": null,
+      "foulsB": null,
+      "unavailable_players": {
+        "home": [],
+        "away": []
+      }
+    }
+  },
+  {
+    "id": "40",
+    "home_team_name_en": "Uruguay",
+    "away_team_name_en": "Cabo Verde",
+    "home_score": "0",
+    "away_score": "0",
+    "home_scorers": "null",
+    "away_scorers": "null",
+    "finished": "FALSE",
+    "time_elapsed": "notstarted",
+    "type": "group",
+    "group": "H",
+    "local_date": "06/21/2026 18:00",
+    "home_team_label": null,
+    "away_team_label": null,
+    "stats": {
+      "possessionA": null,
+      "possessionB": null,
+      "shotsA": null,
+      "shotsB": null,
+      "foulsA": null,
+      "foulsB": null,
+      "unavailable_players": {
+        "home": [
+          {
+            "name": "Ronald Araujo",
+            "type": "injury"
+          },
+          {
+            "name": "Giorgian De Arrascaeta",
+            "type": "injury"
+          }
+        ],
+        "away": []
+      }
+    }
+  },
+  {
+    "id": "41",
+    "home_team_name_en": "France",
+    "away_team_name_en": "Iraq",
+    "home_score": "0",
+    "away_score": "0",
+    "home_scorers": "null",
+    "away_scorers": "null",
+    "finished": "FALSE",
+    "time_elapsed": "notstarted",
+    "type": "group",
+    "group": "I",
+    "local_date": "06/22/2026 17:00",
+    "home_team_label": null,
+    "away_team_label": null,
+    "stats": {
+      "possessionA": null,
+      "possessionB": null,
+      "shotsA": null,
+      "shotsB": null,
+      "foulsA": null,
+      "foulsB": null,
+      "unavailable_players": {
+        "home": [],
+        "away": []
+      }
+    }
+  },
+  {
+    "id": "42",
+    "home_team_name_en": "Norway",
+    "away_team_name_en": "Senegal",
+    "home_score": "0",
+    "away_score": "0",
+    "home_scorers": "null",
+    "away_scorers": "null",
+    "finished": "FALSE",
+    "time_elapsed": "notstarted",
+    "type": "group",
+    "group": "I",
+    "local_date": "06/22/2026 20:00",
+    "home_team_label": null,
+    "away_team_label": null,
+    "stats": {
+      "possessionA": null,
+      "possessionB": null,
+      "shotsA": null,
+      "shotsB": null,
+      "foulsA": null,
+      "foulsB": null,
+      "unavailable_players": {
+        "home": [],
+        "away": []
+      }
+    }
+  },
+  {
+    "id": "43",
+    "home_team_name_en": "Argentina",
+    "away_team_name_en": "Austria",
+    "home_score": "0",
+    "away_score": "0",
+    "home_scorers": "null",
+    "away_scorers": "null",
+    "finished": "FALSE",
+    "time_elapsed": "notstarted",
+    "type": "group",
+    "group": "J",
+    "local_date": "06/22/2026 12:00",
+    "home_team_label": null,
+    "away_team_label": null,
+    "stats": {
+      "possessionA": null,
+      "possessionB": null,
+      "shotsA": null,
+      "shotsB": null,
+      "foulsA": null,
+      "foulsB": null,
+      "unavailable_players": {
+        "home": [
+          {
+            "name": "Nicolás Tagliafico",
+            "type": "injury"
+          }
+        ],
+        "away": []
+      }
+    }
+  },
+  {
+    "id": "44",
+    "home_team_name_en": "Jordan",
+    "away_team_name_en": "Algeria",
+    "home_score": "0",
+    "away_score": "0",
+    "home_scorers": "null",
+    "away_scorers": "null",
+    "finished": "FALSE",
+    "time_elapsed": "notstarted",
+    "type": "group",
+    "group": "J",
+    "local_date": "06/22/2026 20:00",
+    "home_team_label": null,
+    "away_team_label": null,
+    "stats": {
+      "possessionA": null,
+      "possessionB": null,
+      "shotsA": null,
+      "shotsB": null,
+      "foulsA": null,
+      "foulsB": null,
+      "unavailable_players": {
+        "home": [],
+        "away": []
+      }
+    }
+  },
+  {
+    "id": "45",
+    "home_team_name_en": "Portugal",
+    "away_team_name_en": "Uzbekistan",
+    "home_score": "0",
+    "away_score": "0",
+    "home_scorers": "null",
+    "away_scorers": "null",
+    "finished": "FALSE",
+    "time_elapsed": "notstarted",
+    "type": "group",
+    "group": "K",
+    "local_date": "06/23/2026 12:00",
+    "home_team_label": null,
+    "away_team_label": null
+  },
+  {
+    "id": "46",
+    "home_team_name_en": "Panama",
+    "away_team_name_en": "Croatia",
+    "home_score": "0",
+    "away_score": "0",
+    "home_scorers": "null",
+    "away_scorers": "null",
+    "finished": "FALSE",
+    "time_elapsed": "notstarted",
+    "type": "group",
+    "group": "L",
+    "local_date": "06/23/2026 19:00",
+    "home_team_label": null,
+    "away_team_label": null
+  },
+  {
+    "id": "47",
+    "home_team_name_en": "Colombia",
+    "away_team_name_en": "Congo DR",
+    "home_score": "0",
+    "away_score": "0",
+    "home_scorers": "null",
+    "away_scorers": "null",
+    "finished": "FALSE",
+    "time_elapsed": "notstarted",
+    "type": "group",
+    "group": "K",
+    "local_date": "06/23/2026 20:00",
+    "home_team_label": null,
+    "away_team_label": null
+  },
+  {
+    "id": "48",
+    "home_team_name_en": "England",
+    "away_team_name_en": "Ghana",
+    "home_score": "0",
+    "away_score": "0",
+    "home_scorers": "null",
+    "away_scorers": "null",
+    "finished": "FALSE",
+    "time_elapsed": "notstarted",
+    "type": "group",
+    "group": "L",
+    "local_date": "06/23/2026 16:00",
+    "home_team_label": null,
+    "away_team_label": null
+  },
+  {
+    "id": "49",
+    "home_team_name_en": "Scotland",
+    "away_team_name_en": "Brazil",
+    "home_score": "0",
+    "away_score": "0",
+    "home_scorers": "null",
+    "away_scorers": "null",
+    "finished": "FALSE",
+    "time_elapsed": "notstarted",
+    "type": "group",
+    "group": "C",
+    "local_date": "06/24/2026 18:00",
+    "home_team_label": null,
+    "away_team_label": null
+  },
+  {
+    "id": "50",
+    "home_team_name_en": "Morocco",
+    "away_team_name_en": "Haiti",
+    "home_score": "0",
+    "away_score": "0",
+    "home_scorers": "null",
+    "away_scorers": "null",
+    "finished": "FALSE",
+    "time_elapsed": "notstarted",
+    "type": "group",
+    "group": "C",
+    "local_date": "06/24/2026 18:00",
+    "home_team_label": null,
+    "away_team_label": null
+  },
+  {
+    "id": "51",
+    "home_team_name_en": "South Africa",
+    "away_team_name_en": "South Korea",
+    "home_score": "0",
+    "away_score": "0",
+    "home_scorers": "null",
+    "away_scorers": "null",
+    "finished": "FALSE",
+    "time_elapsed": "notstarted",
+    "type": "group",
+    "group": "A",
+    "local_date": "06/24/2026 19:00",
+    "home_team_label": null,
+    "away_team_label": null
+  },
+  {
+    "id": "52",
+    "home_team_name_en": "Czechia",
+    "away_team_name_en": "Mexico",
+    "home_score": "0",
+    "away_score": "0",
+    "home_scorers": "null",
+    "away_scorers": "null",
+    "finished": "FALSE",
+    "time_elapsed": "notstarted",
+    "type": "group",
+    "group": "A",
+    "local_date": "06/24/2026 19:00",
+    "home_team_label": null,
+    "away_team_label": null
+  },
+  {
+    "id": "53",
+    "home_team_name_en": "Bosnia and Herzegovina",
+    "away_team_name_en": "Qatar",
+    "home_score": "0",
+    "away_score": "0",
+    "home_scorers": "null",
+    "away_scorers": "null",
+    "finished": "FALSE",
+    "time_elapsed": "notstarted",
+    "type": "group",
+    "group": "B",
+    "local_date": "06/24/2026 12:00",
+    "home_team_label": null,
+    "away_team_label": null
+  },
+  {
+    "id": "54",
+    "home_team_name_en": "Switzerland",
+    "away_team_name_en": "Canada",
+    "home_score": "0",
+    "away_score": "0",
+    "home_scorers": "null",
+    "away_scorers": "null",
+    "finished": "FALSE",
+    "time_elapsed": "notstarted",
+    "type": "group",
+    "group": "B",
+    "local_date": "06/24/2026 12:00",
+    "home_team_label": null,
+    "away_team_label": null
+  },
+  {
+    "id": "55",
+    "home_team_name_en": "Curacao",
+    "away_team_name_en": "Ivory Coast",
+    "home_score": "0",
+    "away_score": "0",
+    "home_scorers": "null",
+    "away_scorers": "null",
+    "finished": "FALSE",
+    "time_elapsed": "notstarted",
+    "type": "group",
+    "group": "E",
+    "local_date": "06/25/2026 16:00",
+    "home_team_label": null,
+    "away_team_label": null
+  },
+  {
+    "id": "56",
+    "home_team_name_en": "Ecuador",
+    "away_team_name_en": "Germany",
+    "home_score": "0",
+    "away_score": "0",
+    "home_scorers": "null",
+    "away_scorers": "null",
+    "finished": "FALSE",
+    "time_elapsed": "notstarted",
+    "type": "group",
+    "group": "E",
+    "local_date": "06/25/2026 16:00",
+    "home_team_label": null,
+    "away_team_label": null
+  },
+  {
+    "id": "57",
+    "home_team_name_en": "Paraguay",
+    "away_team_name_en": "Australia",
+    "home_score": "0",
+    "away_score": "0",
+    "home_scorers": "null",
+    "away_scorers": "null",
+    "finished": "FALSE",
+    "time_elapsed": "notstarted",
+    "type": "group",
+    "group": "D",
+    "local_date": "06/25/2026 19:00",
+    "home_team_label": null,
+    "away_team_label": null
+  },
+  {
+    "id": "58",
+    "home_team_name_en": "Turkey",
+    "away_team_name_en": "USA",
+    "home_score": "0",
+    "away_score": "0",
+    "home_scorers": "null",
+    "away_scorers": "null",
+    "finished": "FALSE",
+    "time_elapsed": "notstarted",
+    "type": "group",
+    "group": "D",
+    "local_date": "06/25/2026 19:00",
+    "home_team_label": null,
+    "away_team_label": null
+  },
+  {
+    "id": "59",
+    "home_team_name_en": "Japan",
+    "away_team_name_en": "Sweden",
+    "home_score": "0",
+    "away_score": "0",
+    "home_scorers": "null",
+    "away_scorers": "null",
+    "finished": "FALSE",
+    "time_elapsed": "notstarted",
+    "type": "group",
+    "group": "F",
+    "local_date": "06/25/2026 18:00",
+    "home_team_label": null,
+    "away_team_label": null
+  },
+  {
+    "id": "60",
+    "home_team_name_en": "Tunisia",
+    "away_team_name_en": "Netherlands",
+    "home_score": "0",
+    "away_score": "0",
+    "home_scorers": "null",
+    "away_scorers": "null",
+    "finished": "FALSE",
+    "time_elapsed": "notstarted",
+    "type": "group",
+    "group": "F",
+    "local_date": "06/25/2026 18:00",
+    "home_team_label": null,
+    "away_team_label": null
+  },
+  {
+    "id": "61",
+    "home_team_name_en": "Senegal",
+    "away_team_name_en": "Iraq",
+    "home_score": "0",
+    "away_score": "0",
+    "home_scorers": "null",
+    "away_scorers": "null",
+    "finished": "FALSE",
+    "time_elapsed": "notstarted",
+    "type": "group",
+    "group": "I",
+    "local_date": "06/26/2026 15:00",
+    "home_team_label": null,
+    "away_team_label": null
+  },
+  {
+    "id": "62",
+    "home_team_name_en": "Norway",
+    "away_team_name_en": "France",
+    "home_score": "0",
+    "away_score": "0",
+    "home_scorers": "null",
+    "away_scorers": "null",
+    "finished": "FALSE",
+    "time_elapsed": "notstarted",
+    "type": "group",
+    "group": "I",
+    "local_date": "06/26/2026 15:00",
+    "home_team_label": null,
+    "away_team_label": null
+  },
+  {
+    "id": "63",
+    "home_team_name_en": "Egypt",
+    "away_team_name_en": "Iran",
+    "home_score": "0",
+    "away_score": "0",
+    "home_scorers": "null",
+    "away_scorers": "null",
+    "finished": "FALSE",
+    "time_elapsed": "notstarted",
+    "type": "group",
+    "group": "G",
+    "local_date": "06/26/2026 20:00",
+    "home_team_label": null,
+    "away_team_label": null
+  },
+  {
+    "id": "64",
+    "home_team_name_en": "New Zealand",
+    "away_team_name_en": "Belgium",
+    "home_score": "0",
+    "away_score": "0",
+    "home_scorers": "null",
+    "away_scorers": "null",
+    "finished": "FALSE",
+    "time_elapsed": "notstarted",
+    "type": "group",
+    "group": "G",
+    "local_date": "06/26/2026 20:00",
+    "home_team_label": null,
+    "away_team_label": null
+  },
+  {
+    "id": "65",
+    "home_team_name_en": "Cabo Verde",
+    "away_team_name_en": "Saudi Arabia",
+    "home_score": "0",
+    "away_score": "0",
+    "home_scorers": "null",
+    "away_scorers": "null",
+    "finished": "FALSE",
+    "time_elapsed": "notstarted",
+    "type": "group",
+    "group": "H",
+    "local_date": "06/26/2026 19:00",
+    "home_team_label": null,
+    "away_team_label": null
+  },
+  {
+    "id": "66",
+    "home_team_name_en": "Uruguay",
+    "away_team_name_en": "Spain",
+    "home_score": "0",
+    "away_score": "0",
+    "home_scorers": "null",
+    "away_scorers": "null",
+    "finished": "FALSE",
+    "time_elapsed": "notstarted",
+    "type": "group",
+    "group": "H",
+    "local_date": "06/26/2026 18:00",
+    "home_team_label": null,
+    "away_team_label": null
+  },
+  {
+    "id": "67",
+    "home_team_name_en": "Panama",
+    "away_team_name_en": "England",
+    "home_score": "0",
+    "away_score": "0",
+    "home_scorers": "null",
+    "away_scorers": "null",
+    "finished": "FALSE",
+    "time_elapsed": "notstarted",
+    "type": "group",
+    "group": "L",
+    "local_date": "06/27/2026 17:00",
+    "home_team_label": null,
+    "away_team_label": null
+  },
+  {
+    "id": "68",
+    "home_team_name_en": "Croatia",
+    "away_team_name_en": "Ghana",
+    "home_score": "0",
+    "away_score": "0",
+    "home_scorers": "null",
+    "away_scorers": "null",
+    "finished": "FALSE",
+    "time_elapsed": "notstarted",
+    "type": "group",
+    "group": "L",
+    "local_date": "06/27/2026 17:00",
+    "home_team_label": null,
+    "away_team_label": null
+  },
+  {
+    "id": "69",
+    "home_team_name_en": "Algeria",
+    "away_team_name_en": "Austria",
+    "home_score": "0",
+    "away_score": "0",
+    "home_scorers": "null",
+    "away_scorers": "null",
+    "finished": "FALSE",
+    "time_elapsed": "notstarted",
+    "type": "group",
+    "group": "J",
+    "local_date": "06/27/2026 21:00",
+    "home_team_label": null,
+    "away_team_label": null
+  },
+  {
+    "id": "70",
+    "home_team_name_en": "Jordan",
+    "away_team_name_en": "Argentina",
+    "home_score": "0",
+    "away_score": "0",
+    "home_scorers": "null",
+    "away_scorers": "null",
+    "finished": "FALSE",
+    "time_elapsed": "notstarted",
+    "type": "group",
+    "group": "J",
+    "local_date": "06/27/2026 21:00",
+    "home_team_label": null,
+    "away_team_label": null
+  },
+  {
+    "id": "71",
+    "home_team_name_en": "Colombia",
+    "away_team_name_en": "Portugal",
+    "home_score": "0",
+    "away_score": "0",
+    "home_scorers": "null",
+    "away_scorers": "null",
+    "finished": "FALSE",
+    "time_elapsed": "notstarted",
+    "type": "group",
+    "group": "K",
+    "local_date": "06/27/2026 19:30",
+    "home_team_label": null,
+    "away_team_label": null
+  },
+  {
+    "id": "72",
+    "home_team_name_en": "Congo DR",
+    "away_team_name_en": "Uzbekistan",
+    "home_score": "0",
+    "away_score": "0",
+    "home_scorers": "null",
+    "away_scorers": "null",
+    "finished": "FALSE",
+    "time_elapsed": "notstarted",
+    "type": "group",
+    "group": "K",
+    "local_date": "06/27/2026 19:30",
+    "home_team_label": null,
+    "away_team_label": null
+  },
+  {
+    "id": "73",
+    "home_team_name_en": null,
+    "away_team_name_en": null,
+    "home_score": "0",
+    "away_score": "0",
+    "home_scorers": "null",
+    "away_scorers": "null",
+    "finished": "FALSE",
+    "time_elapsed": "notstarted",
+    "type": "r32",
+    "group": "R32",
+    "local_date": "06/28/2026 12:00",
+    "home_team_label": "Runner-up Group A",
+    "away_team_label": "Runner-up Group B"
+  },
+  {
+    "id": "74",
+    "home_team_name_en": null,
+    "away_team_name_en": null,
+    "home_score": "0",
+    "away_score": "0",
+    "home_scorers": "null",
+    "away_scorers": "null",
+    "finished": "FALSE",
+    "time_elapsed": "notstarted",
+    "type": "r32",
+    "group": "R32",
+    "local_date": "06/29/2026 16:30",
+    "home_team_label": "Winner Group E",
+    "away_team_label": "3rd Group A/B/C/D/F"
+  },
+  {
+    "id": "75",
+    "home_team_name_en": null,
+    "away_team_name_en": null,
+    "home_score": "0",
+    "away_score": "0",
+    "home_scorers": "null",
+    "away_scorers": "null",
+    "finished": "FALSE",
+    "time_elapsed": "notstarted",
+    "type": "r32",
+    "group": "R32",
+    "local_date": "06/29/2026 19:00",
+    "home_team_label": "Winner Group F",
+    "away_team_label": "Runner-up Group C"
+  },
+  {
+    "id": "76",
+    "home_team_name_en": null,
+    "away_team_name_en": null,
+    "home_score": "0",
+    "away_score": "0",
+    "home_scorers": "null",
+    "away_scorers": "null",
+    "finished": "FALSE",
+    "time_elapsed": "notstarted",
+    "type": "r32",
+    "group": "R32",
+    "local_date": "06/29/2026 12:00",
+    "home_team_label": "Winner Group C",
+    "away_team_label": "Runner-up Group F"
+  },
+  {
+    "id": "77",
+    "home_team_name_en": null,
+    "away_team_name_en": null,
+    "home_score": "0",
+    "away_score": "0",
+    "home_scorers": "null",
+    "away_scorers": "null",
+    "finished": "FALSE",
+    "time_elapsed": "notstarted",
+    "type": "r32",
+    "group": "R32",
+    "local_date": "06/30/2026 17:00",
+    "home_team_label": "Winner Group I",
+    "away_team_label": "3rd Group C/D/F/G/H"
+  },
+  {
+    "id": "78",
+    "home_team_name_en": null,
+    "away_team_name_en": null,
+    "home_score": "0",
+    "away_score": "0",
+    "home_scorers": "null",
+    "away_scorers": "null",
+    "finished": "FALSE",
+    "time_elapsed": "notstarted",
+    "type": "r32",
+    "group": "R32",
+    "local_date": "06/30/2026 12:00",
+    "home_team_label": "Runner-up Group E",
+    "away_team_label": "Runner-up Group I"
+  },
+  {
+    "id": "79",
+    "home_team_name_en": null,
+    "away_team_name_en": null,
+    "home_score": "0",
+    "away_score": "0",
+    "home_scorers": "null",
+    "away_scorers": "null",
+    "finished": "FALSE",
+    "time_elapsed": "notstarted",
+    "type": "r32",
+    "group": "R32",
+    "local_date": "06/30/2026 19:00",
+    "home_team_label": "Winner Group A",
+    "away_team_label": "3rd Group C/E/F/H/I"
+  },
+  {
+    "id": "80",
+    "home_team_name_en": null,
+    "away_team_name_en": null,
+    "home_score": "0",
+    "away_score": "0",
+    "home_scorers": "null",
+    "away_scorers": "null",
+    "finished": "FALSE",
+    "time_elapsed": "notstarted",
+    "type": "r32",
+    "group": "R32",
+    "local_date": "07/01/2026 12:00",
+    "home_team_label": "Winner Group L",
+    "away_team_label": "3rd Group E/H/I/J/K"
+  },
+  {
+    "id": "81",
+    "home_team_name_en": null,
+    "away_team_name_en": null,
+    "home_score": "0",
+    "away_score": "0",
+    "home_scorers": "null",
+    "away_scorers": "null",
+    "finished": "FALSE",
+    "time_elapsed": "notstarted",
+    "type": "r32",
+    "group": "R32",
+    "local_date": "07/01/2026 17:00",
+    "home_team_label": "Winner Group D",
+    "away_team_label": "3rd Group B/E/F/I/J"
+  },
+  {
+    "id": "82",
+    "home_team_name_en": null,
+    "away_team_name_en": null,
+    "home_score": "0",
+    "away_score": "0",
+    "home_scorers": "null",
+    "away_scorers": "null",
+    "finished": "FALSE",
+    "time_elapsed": "notstarted",
+    "type": "r32",
+    "group": "R32",
+    "local_date": "07/01/2026 13:00",
+    "home_team_label": "Winner Group G",
+    "away_team_label": "3rd Group A/E/H/I/J"
+  },
+  {
+    "id": "83",
+    "home_team_name_en": null,
+    "away_team_name_en": null,
+    "home_score": "0",
+    "away_score": "0",
+    "home_scorers": "null",
+    "away_scorers": "null",
+    "finished": "FALSE",
+    "time_elapsed": "notstarted",
+    "type": "r32",
+    "group": "R32",
+    "local_date": "07/02/2026 19:00",
+    "home_team_label": "Runner-up Group K",
+    "away_team_label": "Runner-up Group L"
+  },
+  {
+    "id": "84",
+    "home_team_name_en": null,
+    "away_team_name_en": null,
+    "home_score": "0",
+    "away_score": "0",
+    "home_scorers": "null",
+    "away_scorers": "null",
+    "finished": "FALSE",
+    "time_elapsed": "notstarted",
+    "type": "r32",
+    "group": "R32",
+    "local_date": "07/02/2026 12:00",
+    "home_team_label": "Winner Group H",
+    "away_team_label": "Runner-up Group J"
+  },
+  {
+    "id": "85",
+    "home_team_name_en": null,
+    "away_team_name_en": null,
+    "home_score": "0",
+    "away_score": "0",
+    "home_scorers": "null",
+    "away_scorers": "null",
+    "finished": "FALSE",
+    "time_elapsed": "notstarted",
+    "type": "r32",
+    "group": "R32",
+    "local_date": "07/02/2026 20:00",
+    "home_team_label": "Winner Group B",
+    "away_team_label": "3rd Group E/F/G/I/J"
+  },
+  {
+    "id": "86",
+    "home_team_name_en": null,
+    "away_team_name_en": null,
+    "home_score": "0",
+    "away_score": "0",
+    "home_scorers": "null",
+    "away_scorers": "null",
+    "finished": "FALSE",
+    "time_elapsed": "notstarted",
+    "type": "r32",
+    "group": "R32",
+    "local_date": "07/03/2026 18:00",
+    "home_team_label": "Winner Group J",
+    "away_team_label": "Runner-up Group H"
+  },
+  {
+    "id": "87",
+    "home_team_name_en": null,
+    "away_team_name_en": null,
+    "home_score": "0",
+    "away_score": "0",
+    "home_scorers": "null",
+    "away_scorers": "null",
+    "finished": "FALSE",
+    "time_elapsed": "notstarted",
+    "type": "r32",
+    "group": "R32",
+    "local_date": "07/03/2026 20:30",
+    "home_team_label": "Winner Group K",
+    "away_team_label": "3rd Group D/E/I/J/L"
+  },
+  {
+    "id": "88",
+    "home_team_name_en": null,
+    "away_team_name_en": null,
+    "home_score": "0",
+    "away_score": "0",
+    "home_scorers": "null",
+    "away_scorers": "null",
+    "finished": "FALSE",
+    "time_elapsed": "notstarted",
+    "type": "r32",
+    "group": "R32",
+    "local_date": "07/03/2026 13:00",
+    "home_team_label": "Runner-up Group D",
+    "away_team_label": "Runner-up Group G"
+  },
+  {
+    "id": "89",
+    "home_team_name_en": null,
+    "away_team_name_en": null,
+    "home_score": "0",
+    "away_score": "0",
+    "home_scorers": "null",
+    "away_scorers": "null",
+    "finished": "FALSE",
+    "time_elapsed": "notstarted",
+    "type": "r16",
+    "group": "R16",
+    "local_date": "07/04/2026 17:00",
+    "home_team_label": "Winner Match 74",
+    "away_team_label": "Winner Match 77"
+  },
+  {
+    "id": "90",
+    "home_team_name_en": null,
+    "away_team_name_en": null,
+    "home_score": "0",
+    "away_score": "0",
+    "home_scorers": "null",
+    "away_scorers": "null",
+    "finished": "FALSE",
+    "time_elapsed": "notstarted",
+    "type": "r16",
+    "group": "R16",
+    "local_date": "07/04/2026 12:00",
+    "home_team_label": "Winner Match 73",
+    "away_team_label": "Winner Match 75"
+  },
+  {
+    "id": "91",
+    "home_team_name_en": null,
+    "away_team_name_en": null,
+    "home_score": "0",
+    "away_score": "0",
+    "home_scorers": "null",
+    "away_scorers": "null",
+    "finished": "FALSE",
+    "time_elapsed": "notstarted",
+    "type": "r16",
+    "group": "R16",
+    "local_date": "07/05/2026 16:00",
+    "home_team_label": "Winner Match 76",
+    "away_team_label": "Winner Match 78"
+  },
+  {
+    "id": "92",
+    "home_team_name_en": null,
+    "away_team_name_en": null,
+    "home_score": "0",
+    "away_score": "0",
+    "home_scorers": "null",
+    "away_scorers": "null",
+    "finished": "FALSE",
+    "time_elapsed": "notstarted",
+    "type": "r16",
+    "group": "R16",
+    "local_date": "07/05/2026 18:00",
+    "home_team_label": "Winner Match 79",
+    "away_team_label": "Winner Match 80"
+  },
+  {
+    "id": "93",
+    "home_team_name_en": null,
+    "away_team_name_en": null,
+    "home_score": "0",
+    "away_score": "0",
+    "home_scorers": "null",
+    "away_scorers": "null",
+    "finished": "FALSE",
+    "time_elapsed": "notstarted",
+    "type": "r16",
+    "group": "R16",
+    "local_date": "07/06/2026 14:00",
+    "home_team_label": "Winner Match 83",
+    "away_team_label": "Winner Match 84"
+  },
+  {
+    "id": "94",
+    "home_team_name_en": null,
+    "away_team_name_en": null,
+    "home_score": "0",
+    "away_score": "0",
+    "home_scorers": "null",
+    "away_scorers": "null",
+    "finished": "FALSE",
+    "time_elapsed": "notstarted",
+    "type": "r16",
+    "group": "R16",
+    "local_date": "07/06/2026 17:00",
+    "home_team_label": "Winner Match 81",
+    "away_team_label": "Winner Match 82"
+  },
+  {
+    "id": "95",
+    "home_team_name_en": null,
+    "away_team_name_en": null,
+    "home_score": "0",
+    "away_score": "0",
+    "home_scorers": "null",
+    "away_scorers": "null",
+    "finished": "FALSE",
+    "time_elapsed": "notstarted",
+    "type": "r16",
+    "group": "R16",
+    "local_date": "07/07/2026 12:00",
+    "home_team_label": "Winner Match 86",
+    "away_team_label": "Winner Match 88"
+  },
+  {
+    "id": "96",
+    "home_team_name_en": null,
+    "away_team_name_en": null,
+    "home_score": "0",
+    "away_score": "0",
+    "home_scorers": "null",
+    "away_scorers": "null",
+    "finished": "FALSE",
+    "time_elapsed": "notstarted",
+    "type": "r16",
+    "group": "R16",
+    "local_date": "07/07/2026 13:00",
+    "home_team_label": "Winner Match 85",
+    "away_team_label": "Winner Match 87"
+  },
+  {
+    "id": "97",
+    "home_team_name_en": null,
+    "away_team_name_en": null,
+    "home_score": "0",
+    "away_score": "0",
+    "home_scorers": "null",
+    "away_scorers": "null",
+    "finished": "FALSE",
+    "time_elapsed": "notstarted",
+    "type": "qf",
+    "group": "QF",
+    "local_date": "07/09/2026 16:00",
+    "home_team_label": "Winner Match 89",
+    "away_team_label": "Winner Match 90"
+  },
+  {
+    "id": "98",
+    "home_team_name_en": null,
+    "away_team_name_en": null,
+    "home_score": "0",
+    "away_score": "0",
+    "home_scorers": "null",
+    "away_scorers": "null",
+    "finished": "FALSE",
+    "time_elapsed": "notstarted",
+    "type": "qf",
+    "group": "QF",
+    "local_date": "07/10/2026 12:00",
+    "home_team_label": "Winner Match 93",
+    "away_team_label": "Winner Match 94"
+  },
+  {
+    "id": "99",
+    "home_team_name_en": null,
+    "away_team_name_en": null,
+    "home_score": "0",
+    "away_score": "0",
+    "home_scorers": "null",
+    "away_scorers": "null",
+    "finished": "FALSE",
+    "time_elapsed": "notstarted",
+    "type": "qf",
+    "group": "QF",
+    "local_date": "07/11/2026 17:00",
+    "home_team_label": "Winner Match 91",
+    "away_team_label": "Winner Match 92"
+  },
+  {
+    "id": "100",
+    "home_team_name_en": null,
+    "away_team_name_en": null,
+    "home_score": "0",
+    "away_score": "0",
+    "home_scorers": "null",
+    "away_scorers": "null",
+    "finished": "FALSE",
+    "time_elapsed": "notstarted",
+    "type": "qf",
+    "group": "QF",
+    "local_date": "07/11/2026 20:00",
+    "home_team_label": "Winner Match 95",
+    "away_team_label": "Winner Match 96"
+  },
+  {
+    "id": "101",
+    "home_team_name_en": null,
+    "away_team_name_en": null,
+    "home_score": "0",
+    "away_score": "0",
+    "home_scorers": "null",
+    "away_scorers": "null",
+    "finished": "FALSE",
+    "time_elapsed": "notstarted",
+    "type": "sf",
+    "group": "SF",
+    "local_date": "07/14/2026 14:00",
+    "home_team_label": "Winner Match 97",
+    "away_team_label": "Winner Match 98"
+  },
+  {
+    "id": "102",
+    "home_team_name_en": null,
+    "away_team_name_en": null,
+    "home_score": "0",
+    "away_score": "0",
+    "home_scorers": "null",
+    "away_scorers": "null",
+    "finished": "FALSE",
+    "time_elapsed": "notstarted",
+    "type": "sf",
+    "group": "SF",
+    "local_date": "07/15/2026 15:00",
+    "home_team_label": "Winner Match 99",
+    "away_team_label": "Winner Match 100"
+  },
+  {
+    "id": "103",
+    "home_team_name_en": null,
+    "away_team_name_en": null,
+    "home_score": "0",
+    "away_score": "0",
+    "home_scorers": "null",
+    "away_scorers": "null",
+    "finished": "FALSE",
+    "time_elapsed": "notstarted",
+    "type": "third",
+    "group": "3RD",
+    "local_date": "07/18/2026 17:00",
+    "home_team_label": "Loser Match 101",
+    "away_team_label": "Loser Match 102"
+  },
+  {
+    "id": "104",
+    "home_team_name_en": null,
+    "away_team_name_en": null,
+    "home_score": "0",
+    "away_score": "0",
+    "home_scorers": "null",
+    "away_scorers": "null",
+    "finished": "FALSE",
+    "time_elapsed": "notstarted",
+    "type": "final",
+    "group": "FINAL",
+    "local_date": "07/19/2026 15:00",
+    "home_team_label": "Winner Match 101",
+    "away_team_label": "Winner Match 102"
+  }
+]
