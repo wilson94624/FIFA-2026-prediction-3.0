@@ -77,9 +77,9 @@
   $$\Delta f = 0.04 \times (1.0 - \text{Bench PQS}) + (\text{若經歷延長賽額外 } +0.02)$$
   *板凳深度評分 (`Bench PQS`) 越佳的國家隊，每場累積疲勞的速度越慢，體現了板凳輪換的戰略價值。*
 - 下一場對戰時，球隊的 PQS 與 ELO 會進行乘積折損：
-  $$\text{att\_pqs}_{\text{active}} = \text{att\_pqs} \times (1.0 - f)$$
-  $$\text{def\_pqs}_{\text{active}} = \text{def\_pqs} \times (1.0 - f)$$
-  $$\text{ELO}_{\text{active}} = \text{FIFA\_Points} \times (1.0 - f \times 0.05)$$
+  $$\text{att-pqs}_{\text{active}} = \text{att-pqs} \times (1.0 - f)$$
+  $$\text{def-pqs}_{\text{active}} = \text{def-pqs} \times (1.0 - f)$$
+  $$\text{ELO}_{\text{active}} = \text{FIFA-Points} \times (1.0 - f \times 0.05)$$
 
 ---
 
@@ -96,9 +96,9 @@
 
 為解決 ELO 積分與球員 PQS 之間的多元共線性（Multicollinearity）造成的強隊戰力通膨，本系統放棄了早期憑直覺設定的固定分母，改以三大盃賽（Euro 2024, Copa América 2024, AFCON 2025-2026）共 127 場真實大賽高階數據作為訓練集，運行**極大似然估計（MLE, Maximum Likelihood Estimation）**與負對數似然損失（NLL Loss）敏感度分析，擬合出兼顧「長期戰績基本面」與「球員級物理引擎」的**黃金權重參數（$c_1 = 0.75, c_2 = 0.20$）**：
 
-$$\lambda = \max\left(0.2, \text{Base}_A + 0.75 \cdot \left(\frac{\text{ELO}_{A, \text{active}} - \text{ELO}_{B, \text{active}}}{400}\right) + 0.20 \cdot (\text{att\_pqs}_{A, \text{active}} - \text{def\_pqs}_{B, \text{active}})\right)$$
+$$\lambda = \max\left(0.2, \text{Base}_A + 0.75 \cdot \left(\frac{\text{ELO}_{A, \text{active}} - \text{ELO}_{B, \text{active}}}{400}\right) + 0.20 \cdot (\text{att-pqs}_{A, \text{active}} - \text{def-pqs}_{B, \text{active}})\right)$$
 
-$$\mu = \max\left(0.2, \text{Base}_B - 0.75 \cdot \left(\frac{\text{ELO}_{A, \text{active}} - \text{ELO}_{B, \text{active}}}{400}\right) + 0.20 \cdot (\text{att\_pqs}_{B, \text{active}} - \text{def\_pqs}_{A, \text{active}})\right)$$
+$$\mu = \max\left(0.2, \text{Base}_B - 0.75 \cdot \left(\frac{\text{ELO}_{A, \text{active}} - \text{ELO}_{B, \text{active}}}{400}\right) + 0.20 \cdot (\text{att-pqs}_{B, \text{active}} - \text{def-pqs}_{A, \text{active}})\right)$$
 
 *註：此黃金比例既能確保 ELO 的強大預測效力，又完美保留了本系統獨創的「球員受傷、大賽疲勞、板凳遞補」等底層物理引擎的干預能力，在數學損失值（Loss）與隨機性間取得了最佳平衡。*
 
