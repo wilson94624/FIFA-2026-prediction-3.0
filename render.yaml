@@ -1,6 +1,7 @@
 services:
   - type: web
     name: fifa-2026-predictor-4-api
+    repo: https://github.com/wilson94624/FIFA-2026-prediction-3.0
     runtime: python
     plan: free
     branch: codex/predictor-4-update
@@ -24,6 +25,7 @@ services:
 
   - type: web
     name: fifa-2026-predictor-4
+    repo: https://github.com/wilson94624/FIFA-2026-prediction-3.0
     runtime: static
     branch: codex/predictor-4-update
     buildCommand: cd frontend && npm ci && npm run build
