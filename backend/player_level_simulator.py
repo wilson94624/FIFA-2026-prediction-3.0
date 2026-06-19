@@ -5,6 +5,11 @@ import pandas as pd
 import time
 import re
 
+try:
+    from backend.app.engine import mix_matrices, sample_score, score_matrix
+except ModuleNotFoundError:  # Direct `python backend/player_level_simulator.py` compatibility.
+    from app.engine import mix_matrices, sample_score, score_matrix
+
 # 設定路徑
 BACKEND_DIR = os.path.dirname(os.path.abspath(__file__))
 BASE_DIR = os.path.dirname(BACKEND_DIR)
@@ -390,36 +395,28 @@ def play_match(team_a, team_b, teams, fatigue, real_games, stage_type="group", i
     # C. 解耦 ELO 與 PQS 的共線性 (經真實盃賽擬合最優：c1 = 0.75, c2 = 0.20)
     c1 = 0.75
     c2 = 0.20
-    lambda_val = max(0.2, base_a + c1 * (eloA - eloB) / 450 + c2 * (att_pqsA - def_pqsB) / 0.3)
-    mu_val = max(0.2, base_b - c1 * (eloA - eloB) / 450 + c2 * (att_pqsB - def_pqsA) / 0.3)
+    normal_lambda = max(0.2, base_a + c1 * (eloA - eloB) / 450 + c2 * (att_pqsA - def_pqsB) / 0.3)
+    normal_mu = max(0.2, base_b - c1 * (eloA - eloB) / 450 + c2 * (att_pqsB - def_pqsA) / 0.3)
     
     # 🌟 非線性強弱懸殊 (Domination) 壓制因子
     elo_diff = eloA - eloB
+    domination_lambda = normal_lambda
+    domination_mu = normal_mu
     if elo_diff > 250:
-        lambda_val += (elo_diff - 250) * 0.0018
-        mu_val = max(0.15, mu_val - (elo_diff - 250) * 0.0005)
+        domination_lambda += (elo_diff - 250) * 0.0018
+        domination_mu = max(0.15, domination_mu - (elo_diff - 250) * 0.0005)
     elif elo_diff < -250:
-        mu_val += (-elo_diff - 250) * 0.0018
-        lambda_val = max(0.15, lambda_val - (-elo_diff - 250) * 0.0005)
-    
-    # 雙變量泊松模擬 (X = U1 + U3, Y = U2 + U3)
-    gamma = 0.08
-    g = min(gamma, lambda_val - 0.01, mu_val - 0.01)
-    if g < 0:
-        g = 0
-        
-    u1 = np.random.poisson(lambda_val - g)
-    u2 = np.random.poisson(mu_val - g)
-    u3 = np.random.poisson(g)
-    
-    goalsA = u1 + u3
-    goalsB = u2 + u3
-    
-    # Dixon-Coles 修正
-    if goalsA == 0 and goalsB == 0 and np.random.rand() < 0.25:
-      if np.random.rand() > 0.5:
-        goalsA = 1
-        goalsB = 1
+        domination_mu += (-elo_diff - 250) * 0.0018
+        domination_lambda = max(0.15, domination_lambda - (-elo_diff - 250) * 0.0005)
+
+    # Predictor 4.0: 在完整比分分布層級混合 70% Normal + 30% Domination。
+    mixed_matrix = mix_matrices(
+        score_matrix(normal_lambda, normal_mu),
+        score_matrix(domination_lambda, domination_mu),
+    )
+    goalsA, goalsB = sample_score(mixed_matrix, int(np.random.randint(0, 2**31 - 1)))
+    lambda_val = 0.7 * normal_lambda + 0.3 * domination_lambda
+    mu_val = 0.7 * normal_mu + 0.3 * domination_mu
             
     winner = 'DRAW'
     extra_time_played = False

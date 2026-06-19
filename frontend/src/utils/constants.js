@@ -50,17 +50,33 @@ export const TEAM_TRANSLATIONS = {
   'Czechia': { cn: '捷克', flag: '🇨🇿' }
 };
 
+const taiwanFormatter = new Intl.DateTimeFormat('zh-TW', {
+  timeZone: 'Asia/Taipei',
+  year: 'numeric',
+  month: '2-digit',
+  day: '2-digit',
+  hour: '2-digit',
+  minute: '2-digit',
+  hourCycle: 'h23',
+});
+
+const formatParts = (date) => {
+  const parts = Object.fromEntries(
+    taiwanFormatter.formatToParts(date).map(({ type, value }) => [type, value]),
+  );
+  return `${parts.year}/${parts.month}/${parts.day} ${parts.hour}:${parts.minute}`;
+};
+
+export const formatTaiwanTime = (value) => {
+  if (!value) return '';
+  const date = value instanceof Date ? value : new Date(value);
+  return Number.isNaN(date.getTime()) ? String(value) : formatParts(date);
+};
+
 export const toTaiwanTime = (localDateStr) => {
   if (!localDateStr) return '';
-  try {
-    const [d, t] = localDateStr.split(' ');
-    const [m, day, y] = d.split('/').map(Number);
-    const [h, min] = t.split(':').map(Number);
-    const date = new Date(y, m - 1, day, h, min);
-    const twDate = new Date(date.getTime() + 12 * 60 * 60 * 1000);
-    const pad = (n) => String(n).padStart(2, '0');
-    return `${pad(twDate.getMonth() + 1)}/${pad(twDate.getDate())}/${twDate.getFullYear()} ${pad(twDate.getHours())}:${pad(twDate.getMinutes())}`;
-  } catch (e) {
-    return localDateStr;
-  }
+  const match = String(localDateStr).match(/^(\d{2})\/(\d{2})\/(\d{4}) (\d{2}):(\d{2})$/);
+  if (!match) return formatTaiwanTime(localDateStr);
+  const [, month, day, year, hour, minute] = match;
+  return formatTaiwanTime(`${year}-${month}-${day}T${hour}:${minute}:00-04:00`);
 };

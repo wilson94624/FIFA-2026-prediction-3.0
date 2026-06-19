@@ -19,9 +19,14 @@ ENV/
 # Backend outputs and cache
 backend/__pycache__/
 backend/*.csv
+backend/data/
+.pytest_cache/
+.ruff_cache/
+htmlcov/
+.coverage
+*.egg-info/
 
 # Sensitive files
 .env
 .env*
 *.local
-
