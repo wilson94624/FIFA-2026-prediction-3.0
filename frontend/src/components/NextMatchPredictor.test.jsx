@@ -25,7 +25,7 @@ const prediction = {
       home: Math.floor(index / 6), away: index % 6, probability: 100 / 36,
     })),
   },
-  risk_analysis: { summary: '這是一場中等風險對局。' },
+  risk_analysis: { summary: '這是一場中等風險對局。', updated_at: '2026-06-20T00:00:00Z' },
   market_evidence: { available: false, reason: 'No fresh market data' },
 };
 
@@ -84,6 +84,7 @@ describe('NextMatchPredictor', () => {
     );
     expect(screen.getAllByText('預測信心：中').length).toBeGreaterThan(0);
     expect(screen.getAllByText('爆冷風險：中（31.2%）').length).toBeGreaterThan(0);
+    expect(screen.getByText(/AI 分析更新/)).toBeInTheDocument();
     expect(screen.getByText('市場證據目前未啟用')).toBeInTheDocument();
     expect(screen.getByText('Miro Muheim')).toBeInTheDocument();
     expect(screen.getByText('客隊停賽球員')).toBeInTheDocument();

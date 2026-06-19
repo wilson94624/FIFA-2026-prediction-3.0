@@ -6,7 +6,7 @@ import json
 import logging
 import time
 from collections.abc import Callable
-from datetime import UTC, datetime
+from datetime import UTC, datetime, timedelta, timezone
 from pathlib import Path
 from typing import Any
 
@@ -186,13 +186,17 @@ def prediction_for_match(
         market,
         settings.default_seed + int(match_id) if match_id.isdigit() else settings.default_seed,
     )
-    analyses = load_json(ANALYSES_PATH, {})
-    prediction["risk_analysis"] = {
-        "summary": analyses.get(match_id, {}).get("llm_analysis")
-        or "模型依據勝平負、預期進球、傷停、疲勞與 ELO 差距產生風險說明。",
-        "generated_by": "gemini" if analyses.get(match_id, {}).get("llm_analysis") else "rules",
-        "factors": prediction["model"]["upset_risk"]["factors"],
-    }
+    existing_analysis = dict(existing.payload).get("risk_analysis") if existing else None
+    if existing_analysis and existing_analysis.get("generated_by") == "gemini_pre_match":
+        prediction["risk_analysis"] = existing_analysis
+    else:
+        analyses = load_json(ANALYSES_PATH, {})
+        prediction["risk_analysis"] = {
+            "summary": analyses.get(match_id, {}).get("llm_analysis")
+            or "模型依據勝平負、預期進球、傷停、疲勞與 ELO 差距產生風險說明。",
+            "generated_by": "gemini" if analyses.get(match_id, {}).get("llm_analysis") else "rules",
+            "factors": prediction["model"]["upset_risk"]["factors"],
+        }
     prediction["metadata"] = metadata("predictor_engine", 0.9)
     if existing:
         existing.input_version = version
@@ -461,6 +465,182 @@ def refresh_predictions(session: Session, progress: Callable[[int, str, str], No
     return len(candidates)
 
 
+def _probability_snapshot(prediction: dict[str, Any]) -> dict[str, float]:
+    probabilities = (prediction.get("model") or {}).get("probabilities") or {}
+    return {
+        key: float(probabilities[key])
+        for key in ("home", "draw", "away")
+        if probabilities.get(key) is not None
+    }
+
+
+def _market_snapshot(prediction: dict[str, Any]) -> dict[str, float]:
+    market = prediction.get("market_evidence") or {}
+    consensus = market.get("consensus") or {}
+    if not market.get("available"):
+        return {}
+    return {
+        key: float(consensus[key])
+        for key in ("home", "draw", "away")
+        if consensus.get(key) is not None
+    }
+
+
+def _probabilities_changed(current: dict[str, float], baseline: dict[str, float]) -> bool:
+    return bool(current and baseline) and any(
+        abs(current.get(key, 0) - baseline.get(key, 0)) > 5
+        for key in ("home", "draw", "away")
+    )
+
+
+def _analysis_updated_at(analysis: dict[str, Any]) -> datetime | None:
+    value = analysis.get("updated_at")
+    if not value:
+        return None
+    try:
+        parsed = datetime.fromisoformat(str(value).replace("Z", "+00:00"))
+        return parsed.replace(tzinfo=UTC) if parsed.tzinfo is None else parsed.astimezone(UTC)
+    except ValueError:
+        return None
+
+
+def select_prematch_analysis_candidates(
+    session: Session, *, limit: int = 10, current_time: datetime | None = None
+) -> list[tuple[MatchRecord, PredictionRecord]]:
+    current_time = current_time or now()
+    current_utc = (
+        current_time.replace(tzinfo=UTC)
+        if current_time.tzinfo is None
+        else current_time.astimezone(UTC)
+    )
+    # The current World Cup feed and frontend interpret local_date as UTC-04:00.
+    tournament_timezone = timezone(timedelta(hours=-4))
+    current_local = current_utc.astimezone(tournament_timezone).replace(tzinfo=None)
+    predictions = {
+        record.match_id: record for record in session.scalars(select(PredictionRecord)).all()
+    }
+    candidates = []
+    for match_record in session.scalars(select(MatchRecord)).all():
+        match = dict(match_record.payload or {})
+        if match.get("finished") in {"TRUE", True}:
+            continue
+        prediction_record = predictions.get(match_record.match_id)
+        if not prediction_record:
+            continue
+        kickoff = parse_match_date(match.get("local_date"))
+        if kickoff == datetime.max or kickoff <= current_local:
+            continue
+
+        prediction = dict(prediction_record.payload or {})
+        analysis = prediction.get("risk_analysis") or {}
+        missing = analysis.get("generated_by") != "gemini_pre_match"
+        updated_at = _analysis_updated_at(analysis)
+        stale = updated_at is None or current_utc - updated_at > timedelta(hours=24)
+        model_changed = _probabilities_changed(
+            _probability_snapshot(prediction), analysis.get("model_probabilities") or {}
+        )
+        market_changed = _probabilities_changed(
+            _market_snapshot(prediction), analysis.get("market_consensus") or {}
+        )
+        until_kickoff = kickoff - current_local
+        within_48_hours = until_kickoff <= timedelta(hours=48)
+        within_5_days = until_kickoff <= timedelta(days=5)
+        changed = model_changed or market_changed
+        if not (missing or (within_5_days and stale) or changed):
+            continue
+        priority = (
+            0 if missing else 1,
+            0 if within_48_hours else 1,
+            0 if changed else 1,
+            0 if within_5_days else 1,
+            kickoff,
+        )
+        candidates.append((priority, match_record, prediction_record))
+    candidates.sort(key=lambda item: item[0])
+    return [(match, prediction) for _, match, prediction in candidates[:limit]]
+
+
+def _gemini_prematch_analysis(
+    prediction: dict[str, Any], match: dict[str, Any]
+) -> str | None:
+    if not settings.gemini_api_key:
+        return None
+    model = prediction.get("model") or {}
+    prompt = {
+        "instruction": (
+            "以繁體中文撰寫 180 字內的賽前風險解釋。只能解釋所提供的既有資料；"
+            "不得提出或修改勝率、比分、Elo、市場賠率、模型結果，也不得輸出 JSON。"
+        ),
+        "match": {
+            "home": prediction.get("home") or match.get("home_team_name_en"),
+            "away": prediction.get("away") or match.get("away_team_name_en"),
+            "kickoff": match.get("local_date"),
+            "stage": match.get("type"),
+        },
+        "model": {
+            "probabilities": model.get("probabilities"),
+            "expected_goals": model.get("expected_goals"),
+            "predicted_score": model.get("predicted_score"),
+            "confidence": model.get("confidence"),
+            "upset_risk": model.get("upset_risk"),
+        },
+        "market_consensus": _market_snapshot(prediction),
+    }
+    url = (
+        "https://generativelanguage.googleapis.com/v1beta/models/"
+        f"gemini-2.5-flash:generateContent?key={settings.gemini_api_key}"
+    )
+    with httpx.Client(timeout=60) as client:
+        response = client.post(
+            url,
+            json={"contents": [{"parts": [{"text": json.dumps(prompt, ensure_ascii=False)}]}]},
+        )
+        response.raise_for_status()
+        return response.json()["candidates"][0]["content"]["parts"][0]["text"].strip()
+
+
+def refresh_prematch_ai_analyses(
+    session: Session, progress: Callable[[int, str, str], None]
+) -> int:
+    candidates = select_prematch_analysis_candidates(session, limit=10)
+    if not settings.gemini_api_key:
+        logger.warning("Skipping pre-match AI cache refresh: GEMINI_API_KEY is not configured")
+        return 0
+
+    updated = 0
+    for index, (match_record, prediction_record) in enumerate(candidates):
+        match = dict(match_record.payload or {})
+        prediction = dict(prediction_record.payload or {})
+        try:
+            summary = _gemini_prematch_analysis(prediction, match)
+            if not summary:
+                raise ValueError("Gemini returned an empty analysis")
+            prediction["risk_analysis"] = {
+                "summary": summary,
+                "generated_by": "gemini_pre_match",
+                "factors": (prediction.get("model") or {}).get("upset_risk", {}).get("factors", []),
+                "updated_at": now().isoformat(),
+                "model_probabilities": _probability_snapshot(prediction),
+                "market_consensus": _market_snapshot(prediction),
+            }
+            prediction_record.payload = prediction
+            prediction_record.source = "predictor_engine+gemini"
+            updated += 1
+            session.commit()
+        except Exception:  # Per-match external API boundary: retain cache and continue sync.
+            logger.warning(
+                "Pre-match Gemini analysis failed; keeping cached analysis: match_id=%s",
+                match_record.match_id,
+                exc_info=True,
+            )
+        progress(
+            76 + int(6 * (index + 1) / max(len(candidates), 1)),
+            "ai_analysis",
+            f"更新賽前 AI 分析 {index + 1}/{len(candidates)}",
+        )
+    return updated
+
+
 def backtest_payload(session: Session, persist: bool = True) -> dict[str, Any]:
     games = [
         game
@@ -608,9 +788,11 @@ def run_sync_pipeline(progress: Callable[[int, str, str], None]) -> dict[str, An
         )
         progress(58, "market", "市場證據處理完成")
         predictions = refresh_predictions(session, progress)
-        progress(80, "backtest", "更新回測報告")
+        progress(76, "ai_analysis", "檢查賽前 AI 分析快取")
+        ai_analyses = refresh_prematch_ai_analyses(session, progress)
+        progress(84, "backtest", "更新回測報告")
         backtest_payload(session)
-        progress(88, "reviews", "產生新完賽檢討")
+        progress(90, "reviews", "產生新完賽檢討")
         reviews = create_new_reviews(session)
         progress(100, "completed", "同步完成")
         return {
@@ -618,6 +800,7 @@ def run_sync_pipeline(progress: Callable[[int, str, str], None]) -> dict[str, An
             "fotmob_matches": fotmob_count,
             "market_events": market_count,
             "predictions": predictions,
+            "ai_analyses": ai_analyses,
             "reviews": reviews,
         }
 

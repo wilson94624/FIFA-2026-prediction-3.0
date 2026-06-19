@@ -269,7 +269,12 @@ export default function NextMatchPredictor({ loading, predictions, championship,
           </div>
           <p>{selected.risk_analysis?.summary}</p>
           <ol>{model.upset_risk.factors.map((factor) => <li key={factor}>{factor}</li>)}</ol>
-          <small>LLM 僅解釋模型，不參與或修改任何機率。</small>
+          <small>
+            {selected.risk_analysis?.updated_at
+              ? `AI 分析更新 ${formatTaiwanTime(selected.risk_analysis.updated_at)} · `
+              : ''}
+            LLM 僅解釋模型，不參與或修改任何機率。
+          </small>
         </section>
 
         <AvailabilityCard match={selectedMatch} prediction={selected} />
