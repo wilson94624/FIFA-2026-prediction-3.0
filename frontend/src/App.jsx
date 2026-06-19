@@ -24,6 +24,7 @@ const JOB_STAGE_LABELS = {
   fotmob: '更新比賽統計',
   market: '更新市場資料',
   predictions: '更新預測',
+  ai_analysis: '更新賽前 AI 分析',
   backtest: '更新模型表現',
   reviews: '更新賽後回顧',
   simulation: '重新模擬奪冠機率',
