@@ -98,6 +98,11 @@ function MarketEvidence({ prediction }) {
   }
   const values = market.value_scores || {};
   const fused = prediction.market_fused?.probabilities;
+  const valueDisplay = (value) => {
+    if (Math.abs(value) < 0.5) return { text: '市場與模型接近', tone: 'neutral' };
+    if (value < 0) return { text: `市場高估 ${Math.abs(value).toFixed(1)}%`, tone: 'negative' };
+    return { text: `模型較看好 ${value.toFixed(1)}%`, tone: 'positive' };
+  };
   return (
     <section className="glass-card market-card">
       <div className="section-heading-row">
@@ -108,16 +113,17 @@ function MarketEvidence({ prediction }) {
         <span className="freshness">更新 {formatTaiwanTime(market.last_update) || '—'}</span>
       </div>
       <div className="market-grid">
-        {['home', 'draw', 'away'].map((key) => (
-          <div key={key}>
-            <span>{key === 'home' ? teamLabel(prediction.home) : key === 'away' ? teamLabel(prediction.away) : '🤝 和局'}</span>
-            <strong>{market.consensus[key].toFixed(1)}%</strong>
-            <small className={(values[key] || 0) >= 0 ? 'positive' : 'negative'}>
-              Value {(values[key] || 0) >= 0 ? '+' : ''}{(values[key] || 0).toFixed(1)}pp
-            </small>
-            {fused && <em>融合參考 {fused[key].toFixed(1)}%</em>}
-          </div>
-        ))}
+        {['home', 'draw', 'away'].map((key) => {
+          const display = valueDisplay(values[key] || 0);
+          return (
+            <div key={key}>
+              <span>{key === 'home' ? teamLabel(prediction.home) : key === 'away' ? teamLabel(prediction.away) : '🤝 和局'}</span>
+              <strong>{market.consensus[key].toFixed(1)}%</strong>
+              <small className={display.tone}>{display.text}</small>
+              {fused && <em>融合參考 {fused[key].toFixed(1)}%</em>}
+            </div>
+          );
+        })}
       </div>
       {(market.recommended_scores?.length > 0 || market.avoid_scores?.length > 0) && (
         <div className="market-score-notes">

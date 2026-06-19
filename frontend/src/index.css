@@ -257,7 +257,7 @@ body {
 .market-grid span, .market-grid small, .market-grid em { display: block; font-size: 13px; line-height: 1.5; }
 .market-grid strong { display: block; font-size: 23px; margin: 7px 0; }
 .market-grid em { color: var(--text-secondary); font-style: normal; margin-top: 7px; }
-.positive { color: #6ee7b7; }.negative { color: #fda4af; }
+.positive { color: #6ee7b7; }.negative { color: #fda4af; }.neutral { color: var(--text-secondary); }
 .market-score-notes { margin-top: 16px; display: grid; gap: 8px; color: var(--text-secondary); font-size: 14px; line-height: 1.7; }
 .search-input { width: 100%; margin: 18px 0; padding: 11px 14px; background: rgba(255,255,255,.03); color: white; border: 1px solid var(--glass-border); border-radius: 10px; }
 .championship-top-list { display: grid; gap: 9px; }

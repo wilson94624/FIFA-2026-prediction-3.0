@@ -1,0 +1,17 @@
+{
+  "name": "🏆 FIFA 2026 PREDICTOR",
+  "short_name": "FIFA 2026",
+  "description": "FIFA 2026 世界盃賽事預測、淘汰賽對陣與奪冠機率分析。",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#080b16",
+  "theme_color": "#080b16",
+  "icons": [
+    {
+      "src": "/favicon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any"
+    }
+  ]
+}
