@@ -1,5 +1,5 @@
-import { fireEvent, render, screen, within } from '@testing-library/react';
-import { describe, expect, it } from 'vitest';
+import { cleanup, fireEvent, render, screen, within } from '@testing-library/react';
+import { afterEach, describe, expect, it } from 'vitest';
 import NextMatchPredictor from './NextMatchPredictor';
 
 const prediction = {
@@ -34,7 +34,36 @@ const teams = {
   'Bosnia and Herzegovina': { fifa_rank: 59, fifa_points: 1450 },
 };
 
+afterEach(cleanup);
+
 describe('NextMatchPredictor', () => {
+  it('describes market value in plain language', () => {
+    const marketPrediction = {
+      ...prediction,
+      market_evidence: {
+        available: true,
+        bookmaker_count: 5,
+        last_update: '2026-06-20T00:00:00Z',
+        consensus: { home: 60, draw: 25, away: 15 },
+        value_scores: { home: -22.5, draw: 13.8, away: 0.2 },
+      },
+    };
+
+    render(
+      <NextMatchPredictor
+        loading={false}
+        predictions={[marketPrediction]}
+        championship={{ probabilities: [] }}
+        teams={teams}
+        matches={[]}
+      />,
+    );
+
+    expect(screen.getByText('市場高估 22.5%')).toBeInTheDocument();
+    expect(screen.getByText('模型較看好 13.8%')).toBeInTheDocument();
+    expect(screen.getByText('市場與模型接近')).toBeInTheDocument();
+  });
+
   it('renders model risk, market fallback and complete matrix modal', () => {
     render(
       <NextMatchPredictor
