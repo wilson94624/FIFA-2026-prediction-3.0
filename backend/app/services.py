@@ -1,0 +1,679 @@
+from __future__ import annotations
+
+import csv
+import hashlib
+import json
+import logging
+import time
+from collections.abc import Callable
+from datetime import UTC, datetime
+from pathlib import Path
+from typing import Any
+
+import httpx
+from sqlalchemy import func, select
+from sqlalchemy.orm import Session
+
+from .analytics import calculate_backtest, deterministic_review
+from .config import FRONTEND_DATA_DIR, settings
+from .db import SessionLocal
+from .engine import parse_match_date, predict_match
+from .fotmob import fetch_match_stats
+from .market import fetch_market_evidence
+from .models import (
+    BacktestRun,
+    MarketOddsRecord,
+    MatchRecord,
+    MatchReview,
+    MetricRecord,
+    PredictionRecord,
+    SnapshotRecord,
+)
+
+TEAMS_PATH = FRONTEND_DATA_DIR / "teams_db.json"
+MATCHES_PATH = FRONTEND_DATA_DIR / "real_games_results.json"
+ANALYSES_PATH = FRONTEND_DATA_DIR / "match_analyses.json"
+CHAMPIONSHIP_PATH = FRONTEND_DATA_DIR / "simulation_probabilities.json"
+ARCHIVE_DIR = FRONTEND_DATA_DIR.parents[1] / "backend" / "archive"
+_cache = {"hits": 0, "misses": 0}
+logger = logging.getLogger(__name__)
+RETRYABLE_ERRORS = (
+    ConnectionResetError,
+    TimeoutError,
+    httpx.ReadError,
+    httpx.ConnectError,
+    httpx.TimeoutException,
+)
+
+
+def _get_with_retry(client: httpx.Client, url: str, **kwargs: Any) -> httpx.Response:
+    for attempt in range(3):
+        try:
+            return client.get(url, **kwargs)
+        except RETRYABLE_ERRORS:
+            if attempt == 2:
+                raise
+            logger.warning("World Cup API request failed; retrying (%s/3)", attempt + 1)
+            time.sleep(0.25 * (2**attempt))
+    raise RuntimeError("unreachable")
+
+
+def now() -> datetime:
+    return datetime.now(UTC)
+
+
+def load_json(path: Path, fallback: Any) -> Any:
+    try:
+        return json.loads(path.read_text(encoding="utf-8"))
+    except (OSError, json.JSONDecodeError):
+        return fallback
+
+
+def data_version() -> str:
+    digest = hashlib.sha256()
+    for path in (TEAMS_PATH, MATCHES_PATH):
+        if path.exists():
+            digest.update(path.read_bytes())
+    return digest.hexdigest()[:16]
+
+
+def metadata(
+    source: str, confidence: float = 1.0, fetched_at: datetime | None = None
+) -> dict[str, Any]:
+    return {
+        "source": source,
+        "fetched_at": (fetched_at or now()).isoformat(),
+        "version": settings.model_version,
+        "confidence": confidence,
+    }
+
+
+def seed_database(session: Session) -> None:
+    games = load_json(MATCHES_PATH, [])
+    for game in games:
+        match_id = str(game.get("id"))
+        record = session.scalar(select(MatchRecord).where(MatchRecord.match_id == match_id))
+        if record:
+            continue
+        session.add(
+            MatchRecord(
+                match_id=match_id,
+                payload=game,
+                source="worldcup26_seed",
+                fetched_at=now(),
+                version=settings.model_version,
+                confidence=0.85,
+            )
+        )
+
+    championship = load_json(CHAMPIONSHIP_PATH, {})
+    if championship and not session.scalar(
+        select(SnapshotRecord).where(SnapshotRecord.key == "championship_odds")
+    ):
+        session.add(
+            SnapshotRecord(
+                key="championship_odds",
+                payload=championship,
+                source="legacy_monte_carlo_seed",
+                fetched_at=now(),
+                version=settings.model_version,
+                confidence=0.8,
+            )
+        )
+    session.commit()
+
+
+def teams_payload() -> dict[str, dict[str, Any]]:
+    teams = load_json(TEAMS_PATH, {})
+    stamp = metadata("fc26_player_database", 0.85)
+    return {name: {**team, "metadata": stamp} for name, team in teams.items()}
+
+
+def raw_teams() -> dict[str, dict[str, Any]]:
+    return load_json(TEAMS_PATH, {})
+
+
+def all_matches(session: Session) -> list[dict[str, Any]]:
+    records = session.scalars(select(MatchRecord)).all()
+    matches = [
+        {
+            **record.payload,
+            "metadata": metadata(
+                record.source,
+                record.confidence,
+                record.fetched_at.replace(tzinfo=UTC)
+                if record.fetched_at.tzinfo is None
+                else record.fetched_at,
+            ),
+        }
+        for record in records
+    ]
+    return sorted(matches, key=lambda match: parse_match_date(match.get("local_date")))
+
+
+def raw_matches(session: Session) -> list[dict[str, Any]]:
+    records = session.scalars(select(MatchRecord)).all()
+    return sorted(
+        [dict(record.payload) for record in records],
+        key=lambda match: parse_match_date(match.get("local_date")),
+    )
+
+
+def _market_for_match(session: Session, match_id: str) -> dict[str, Any] | None:
+    record = session.scalar(select(MarketOddsRecord).where(MarketOddsRecord.match_id == match_id))
+    return dict(record.payload) if record else None
+
+
+def prediction_for_match(
+    session: Session, match: dict[str, Any], *, force: bool = False
+) -> dict[str, Any]:
+    match_id = str(match.get("id"))
+    version = data_version()
+    market = _market_for_match(session, match_id)
+    if market:
+        version = f"{version}:{market.get('last_update', 'market')}"
+    existing = session.scalar(select(PredictionRecord).where(PredictionRecord.match_id == match_id))
+    if existing and existing.input_version == version and not force:
+        _cache["hits"] += 1
+        return dict(existing.payload)
+    _cache["misses"] += 1
+
+    prediction = predict_match(
+        match,
+        raw_teams(),
+        raw_matches(session),
+        market,
+        settings.default_seed + int(match_id) if match_id.isdigit() else settings.default_seed,
+    )
+    analyses = load_json(ANALYSES_PATH, {})
+    prediction["risk_analysis"] = {
+        "summary": analyses.get(match_id, {}).get("llm_analysis")
+        or "模型依據勝平負、預期進球、傷停、疲勞與 ELO 差距產生風險說明。",
+        "generated_by": "gemini" if analyses.get(match_id, {}).get("llm_analysis") else "rules",
+        "factors": prediction["model"]["upset_risk"]["factors"],
+    }
+    prediction["metadata"] = metadata("predictor_engine", 0.9)
+    if existing:
+        existing.input_version = version
+        existing.payload = prediction
+        existing.source = "predictor_engine"
+        existing.fetched_at = now()
+        existing.version = settings.model_version
+        existing.confidence = 0.9
+    else:
+        session.add(
+            PredictionRecord(
+                match_id=match_id,
+                input_version=version,
+                payload=prediction,
+                source="predictor_engine",
+                fetched_at=now(),
+                version=settings.model_version,
+                confidence=0.9,
+            )
+        )
+    session.commit()
+    return prediction
+
+
+def list_predictions(session: Session, include_finished: bool = False) -> list[dict[str, Any]]:
+    predictions = []
+    for match in raw_matches(session):
+        if not include_finished and match.get("finished") in {"TRUE", True}:
+            continue
+        home, away = match.get("home_team_name_en"), match.get("away_team_name_en")
+        if not home or not away or home not in raw_teams() or away not in raw_teams():
+            continue
+        predictions.append(prediction_for_match(session, match))
+    return predictions
+
+
+def tournament_payload(session: Session) -> dict[str, Any]:
+    return {
+        "teams": teams_payload(),
+        "matches": all_matches(session),
+        "metadata": metadata("worldcup26_and_fc26", 0.85),
+    }
+
+
+def championship_payload(session: Session) -> dict[str, Any]:
+    record = session.scalar(select(SnapshotRecord).where(SnapshotRecord.key == "championship_odds"))
+    if not record:
+        return {"last_updated": None, "probabilities": [], "metadata": metadata("missing", 0)}
+    return {
+        **record.payload,
+        "metadata": metadata(
+            record.source,
+            record.confidence,
+            record.fetched_at.replace(tzinfo=UTC)
+            if record.fetched_at.tzinfo is None
+            else record.fetched_at,
+        ),
+    }
+
+
+def record_metric(
+    session: Session, name: str, value: float, details: dict[str, Any] | None = None
+) -> None:
+    session.add(MetricRecord(name=name, value=value, details=details or {}))
+    session.commit()
+
+
+def metrics_payload(session: Session) -> dict[str, Any]:
+    response: dict[str, Any] = {}
+    for name in ("worldcup_api_time", "fotmob_time", "simulation_time"):
+        latest = session.scalar(
+            select(MetricRecord).where(MetricRecord.name == name).order_by(MetricRecord.id.desc())
+        )
+        average = session.scalar(
+            select(func.avg(MetricRecord.value)).where(MetricRecord.name == name)
+        )
+        response[name] = {
+            "latest_seconds": round(latest.value, 3) if latest else None,
+            "average_seconds": round(float(average), 3) if average is not None else None,
+        }
+    total = _cache["hits"] + _cache["misses"]
+    response["cache_hit_rate"] = round(_cache["hits"] / total * 100, 2) if total else 0.0
+    response["metadata"] = metadata("application_metrics", 1.0)
+    return response
+
+
+def refresh_market_odds(session: Session, games: list[dict[str, Any]]) -> int:
+    try:
+        evidence = fetch_market_evidence(games) or {}
+    except (ConnectionResetError, TimeoutError, httpx.HTTPError, TypeError, ValueError):
+        logger.warning("Market sync failed; retaining cached market data", exc_info=True)
+        return 0
+    for match_id, payload in evidence.items():
+        if not isinstance(payload, dict):
+            logger.warning("Skipping invalid market payload: match_id=%s", match_id)
+            continue
+        record = session.scalar(
+            select(MarketOddsRecord).where(MarketOddsRecord.match_id == match_id)
+        )
+        if record:
+            record.payload = payload
+            record.fetched_at = now()
+            record.confidence = float(payload.get("confidence", 0.5))
+        else:
+            session.add(
+                MarketOddsRecord(
+                    match_id=match_id,
+                    payload=payload,
+                    source="the_odds_api",
+                    fetched_at=now(),
+                    version=settings.model_version,
+                    confidence=float(payload.get("confidence", 0.5)),
+                )
+            )
+    session.commit()
+    return len(evidence)
+
+
+def refresh_fotmob_stats(session: Session, progress: Callable[[int, str, str], None]) -> int:
+    started = time.perf_counter()
+    records = session.scalars(select(MatchRecord)).all()
+    candidates = []
+    today = datetime.now()
+    for record in records:
+        game = record.payload or {}
+        if not isinstance(game, dict):
+            logger.warning("Skipping invalid match payload: match_id=%s", record.match_id)
+            continue
+        stats = game.get("stats") or {}
+        is_finished = game.get("finished") in {"TRUE", True}
+        match_date = parse_match_date(game.get("local_date"))
+        is_near = match_date != datetime.max and abs((match_date - today).days) <= 3
+        if (is_finished or is_near) and not stats.get("fotmob_complete"):
+            candidates.append(record)
+
+    updated = 0
+    for index, record in enumerate(candidates):
+        try:
+            fetched = fetch_match_stats(record.payload or {})
+        except (ConnectionResetError, TimeoutError, httpx.HTTPError):
+            logger.warning(
+                "FotMob match sync failed; continuing: match_id=%s source=fotmob",
+                record.match_id,
+                exc_info=True,
+            )
+            fetched = None
+        except (AttributeError, TypeError, ValueError):
+            logger.warning(
+                "Invalid FotMob payload; continuing: match_id=%s source=fotmob",
+                record.match_id,
+                exc_info=True,
+            )
+            fetched = None
+        if isinstance(fetched, dict) and fetched:
+            payload = dict(record.payload or {})
+            payload["stats"] = {**(payload.get("stats") or {}), **fetched}
+            record.payload = payload
+            record.source = "worldcup26_api+fotmob"
+            record.fetched_at = now()
+            record.confidence = 0.95
+            updated += 1
+        progress(
+            35 + int(15 * (index + 1) / max(len(candidates), 1)),
+            "fotmob",
+            f"FotMob 高階資料 {index + 1}/{len(candidates)}",
+        )
+    session.commit()
+    record_metric(session, "fotmob_time", time.perf_counter() - started)
+    return updated
+
+
+def _normalize_remote_game(game: dict[str, Any]) -> dict[str, Any]:
+    aliases = {
+        "United States": "USA",
+        "Czech Republic": "Czechia",
+        "Cape Verde": "Cabo Verde",
+        "Democratic Republic of the Congo": "Congo DR",
+        "Curaçao": "Curacao",
+    }
+    game = game or {}
+    normalized = dict(game)
+    normalized["home_team_name_en"] = aliases.get(
+        game.get("home_team_name_en"), game.get("home_team_name_en")
+    )
+    normalized["away_team_name_en"] = aliases.get(
+        game.get("away_team_name_en"), game.get("away_team_name_en")
+    )
+    normalized["finished"] = "TRUE" if game.get("finished") in {"TRUE", True} else "FALSE"
+    return normalized
+
+
+def sync_remote_matches(session: Session, progress: Callable[[int, str, str], None]) -> int:
+    started = time.perf_counter()
+    progress(8, "worldcup", "下載世界盃賽程與賽果")
+    try:
+        with httpx.Client(timeout=20) as client:
+            response = _get_with_retry(client, settings.world_cup_api_url)
+            response.raise_for_status()
+            payload = response.json() or {}
+            remote_games = payload.get("games") or [] if isinstance(payload, dict) else []
+    except (ConnectionResetError, TimeoutError, httpx.HTTPError, TypeError, ValueError):
+        logger.warning("World Cup API sync failed; retaining cached match data", exc_info=True)
+        progress(35, "worldcup", "世界盃 API 暫時無法連線，沿用快取資料")
+        record_metric(session, "worldcup_api_time", time.perf_counter() - started)
+        return 0
+    if not isinstance(remote_games, list):
+        logger.warning("World Cup API returned invalid games payload; retaining cached data")
+        remote_games = []
+    record_metric(session, "worldcup_api_time", time.perf_counter() - started)
+
+    existing = {record.match_id: record for record in session.scalars(select(MatchRecord)).all()}
+    for index, raw_game in enumerate(remote_games):
+        if not isinstance(raw_game, dict):
+            logger.warning("Skipping invalid World Cup match payload at index=%s", index)
+            continue
+        game = _normalize_remote_game(raw_game)
+        match_id = str(game.get("id"))
+        if not game.get("id"):
+            logger.warning("Skipping World Cup match without id at index=%s", index)
+            continue
+        previous = existing.get(match_id)
+        previous_payload = previous.payload or {} if previous else {}
+        if previous and previous_payload.get("stats") and not game.get("stats"):
+            game["stats"] = previous_payload["stats"]
+        if previous:
+            previous.payload = game
+            previous.source = "worldcup26_api"
+            previous.fetched_at = now()
+            previous.confidence = 0.9
+        else:
+            session.add(
+                MatchRecord(
+                    match_id=match_id,
+                    payload=game,
+                    source="worldcup26_api",
+                    fetched_at=now(),
+                    version=settings.model_version,
+                    confidence=0.9,
+                )
+            )
+        if index % 10 == 0:
+            progress(
+                10 + int(25 * (index + 1) / max(len(remote_games), 1)), "worldcup", "更新賽事資料"
+            )
+    session.commit()
+    return len(remote_games)
+
+
+def refresh_predictions(session: Session, progress: Callable[[int, str, str], None]) -> int:
+    games = raw_matches(session)
+    candidates = [
+        game
+        for game in games
+        if game.get("home_team_name_en") in raw_teams()
+        and game.get("away_team_name_en") in raw_teams()
+    ]
+    for index, game in enumerate(candidates):
+        prediction_for_match(session, game, force=True)
+        if index % 8 == 0:
+            progress(
+                60 + int(15 * (index + 1) / max(len(candidates), 1)), "predictions", "重新計算預測"
+            )
+    return len(candidates)
+
+
+def backtest_payload(session: Session, persist: bool = True) -> dict[str, Any]:
+    games = [
+        game
+        for game in raw_matches(session)
+        if game.get("finished") in {"TRUE", True}
+        and game.get("home_team_name_en") in raw_teams()
+        and game.get("away_team_name_en") in raw_teams()
+    ]
+    rows = [(prediction_for_match(session, game), game) for game in games]
+    summary = {
+        "dataset": "2026 retrospective walk-forward",
+        "status": "retrospective",
+        "development_sets": development_set_summary(),
+        **calculate_backtest(rows),
+        "metadata": metadata("prediction_snapshots_and_results", 0.8),
+    }
+    if persist:
+        session.add(
+            BacktestRun(
+                dataset=summary["dataset"],
+                model_version=settings.model_version,
+                payload=summary,
+            )
+        )
+        session.commit()
+    return summary
+
+
+def development_set_summary() -> dict[str, Any]:
+    files = {
+        "Euro 2024": ARCHIVE_DIR / "Euro_2024_Matches.csv",
+        "Copa 2024": ARCHIVE_DIR / "Copa_2024_Matches.csv",
+        "AFCON 2025-26": ARCHIVE_DIR / "afcon_2025_2026_dataset.csv",
+    }
+    counts: dict[str, int] = {}
+    for name, path in files.items():
+        try:
+            with path.open(encoding="utf-8", errors="replace") as handle:
+                counts[name] = max(0, sum(1 for _ in csv.reader(handle)) - 1)
+        except OSError:
+            counts[name] = 0
+    return {
+        "role": "parameter development only; 127 matches remain after team-data validation",
+        "matches": counts,
+        "raw_total": sum(counts.values()),
+        "total": 127,
+    }
+
+
+def latest_backtest(session: Session) -> dict[str, Any]:
+    record = session.scalar(select(BacktestRun).order_by(BacktestRun.id.desc()))
+    return dict(record.payload) if record else backtest_payload(session)
+
+
+def _gemini_review(
+    base_review: dict[str, Any], prediction: dict[str, Any], match: dict[str, Any]
+) -> str | None:
+    if not settings.gemini_api_key:
+        return None
+    prompt = {
+        "instruction": (
+            "以繁體中文撰寫 120 字內賽後模型檢討。只解釋既有分類與資料，"
+            "不得修改勝率、預測或 failure_type。"
+        ),
+        "classification": base_review,
+        "prediction": prediction["model"],
+        "actual": {
+            "score": [match.get("home_score"), match.get("away_score")],
+            "stats": match.get("stats"),
+        },
+    }
+    url = (
+        "https://generativelanguage.googleapis.com/v1beta/models/"
+        f"gemini-2.5-flash:generateContent?key={settings.gemini_api_key}"
+    )
+    try:
+        with httpx.Client(timeout=60) as client:
+            response = client.post(
+                url,
+                json={"contents": [{"parts": [{"text": json.dumps(prompt, ensure_ascii=False)}]}]},
+            )
+            response.raise_for_status()
+            return response.json()["candidates"][0]["content"]["parts"][0]["text"].strip()
+    except (httpx.HTTPError, KeyError, IndexError, TypeError):
+        return None
+
+
+def create_new_reviews(session: Session) -> int:
+    count = 0
+    for match in raw_matches(session):
+        if match.get("finished") not in {"TRUE", True}:
+            continue
+        match_id = str(match.get("id"))
+        if session.scalar(select(MatchReview).where(MatchReview.match_id == match_id)):
+            continue
+        try:
+            prediction = prediction_for_match(session, match)
+        except ValueError:
+            continue
+        review = deterministic_review(prediction, match)
+        llm_text = _gemini_review(review, prediction, match)
+        if llm_text:
+            review["review"] = llm_text
+            review["generated_by"] = "gemini_with_rules"
+        session.add(
+            MatchReview(
+                match_id=match_id,
+                failure_type=review["failure_type"],
+                payload=review,
+                source=review["generated_by"],
+                fetched_at=now(),
+                version=settings.model_version,
+                confidence=0.85 if llm_text else 0.7,
+            )
+        )
+        count += 1
+    session.commit()
+    return count
+
+
+def review_for_match(session: Session, match_id: str) -> dict[str, Any] | None:
+    record = session.scalar(select(MatchReview).where(MatchReview.match_id == match_id))
+    if not record:
+        return None
+    return {
+        **record.payload,
+        "metadata": metadata(
+            record.source,
+            record.confidence,
+            record.fetched_at.replace(tzinfo=UTC)
+            if record.fetched_at.tzinfo is None
+            else record.fetched_at,
+        ),
+    }
+
+
+def run_sync_pipeline(progress: Callable[[int, str, str], None]) -> dict[str, Any]:
+    with SessionLocal() as session:
+        synced = sync_remote_matches(session, progress)
+        progress(35, "fotmob", "同步 xG、射門、牌、傷停與換人")
+        fotmob_count = refresh_fotmob_stats(session, progress)
+        progress(52, "market", "同步市場 1X2 證據")
+        market_count = (
+            refresh_market_odds(session, raw_matches(session)) if settings.odds_api_key else 0
+        )
+        progress(58, "market", "市場證據處理完成")
+        predictions = refresh_predictions(session, progress)
+        progress(80, "backtest", "更新回測報告")
+        backtest_payload(session)
+        progress(88, "reviews", "產生新完賽檢討")
+        reviews = create_new_reviews(session)
+        progress(100, "completed", "同步完成")
+        return {
+            "matches": synced,
+            "fotmob_matches": fotmob_count,
+            "market_events": market_count,
+            "predictions": predictions,
+            "reviews": reviews,
+        }
+
+
+def run_simulation_pipeline(progress: Callable[[int, str, str], None]) -> dict[str, Any]:
+    from backend import player_level_simulator as legacy
+
+    started = time.perf_counter()
+    progress(5, "simulation", "準備 10,000 次蒙地卡羅模擬")
+    teams = legacy.apply_real_performance_boost(legacy.load_teams(), legacy.load_real_games())
+    games = legacy.load_real_games()
+    counters = {
+        team: {
+            key: 0 for key in ("R32_pct", "R16_pct", "QF_pct", "SF_pct", "Final_pct", "Winner_pct")
+        }
+        for team in teams
+    }
+    runs = 10_000
+    for index in range(runs):
+        result = legacy.simulate_tournament_once(teams, games)
+        for key in ("R32", "R16", "QF", "SF", "Final"):
+            for team in result[key]:
+                counters[team][f"{key}_pct"] += 1
+        counters[result["Winner"]]["Winner_pct"] += 1
+        if index and index % 1000 == 0:
+            progress(5 + int(index / runs * 90), "simulation", f"已完成 {index:,} 次模擬")
+    probabilities = []
+    for team, values in counters.items():
+        probabilities.append(
+            {
+                "team_name": team,
+                **{key: round(value / runs * 100, 2) for key, value in values.items()},
+            }
+        )
+    probabilities.sort(key=lambda item: item["Winner_pct"], reverse=True)
+    payload = {
+        "last_updated": now().isoformat(),
+        "probabilities": probabilities,
+    }
+    with SessionLocal() as session:
+        record = session.scalar(
+            select(SnapshotRecord).where(SnapshotRecord.key == "championship_odds")
+        )
+        if record:
+            record.payload = payload
+            record.source = "backend_monte_carlo"
+            record.fetched_at = now()
+            record.confidence = 0.9
+        else:
+            session.add(
+                SnapshotRecord(
+                    key="championship_odds",
+                    payload=payload,
+                    source="backend_monte_carlo",
+                    fetched_at=now(),
+                    version=settings.model_version,
+                    confidence=0.9,
+                )
+            )
+        record_metric(session, "simulation_time", time.perf_counter() - started)
+        session.commit()
+    progress(100, "completed", "模擬完成")
+    return {"runs": runs, "teams": len(probabilities)}

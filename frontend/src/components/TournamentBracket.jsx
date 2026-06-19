@@ -1,6 +1,6 @@
-import React, { useState } from 'react';
+import { useState } from 'react';
 import { TEAM_TRANSLATIONS, toTaiwanTime } from '../utils/constants';
-import { parseRealScorers } from '../utils/simulator';
+import { parseRealScorers } from '../utils/format';
 
 // 國名與國旗轉換
 const t = (name) => {
@@ -38,7 +38,7 @@ const translateLabel = (label) => {
   }
   
   // 3rd Group X/Y/Z -> X/Y/Z組第三
-  match = label.match(/3rd Group ([A-L\/]+)/i);
+  match = label.match(/3rd Group ([A-L/]+)/i);
   if (match) {
     return `${match[1]}組第三`;
   }
@@ -201,14 +201,7 @@ export default function TournamentBracket({
       if (g.stats && 
           typeof g.stats.possessionA !== 'undefined' && 
           typeof g.stats.shotsA !== 'undefined') {
-        stats = {
-          possessionA: g.stats.possessionA,
-          possessionB: g.stats.possessionB,
-          shotsA: g.stats.shotsA,
-          shotsB: g.stats.shotsB,
-          foulsA: g.stats.foulsA,
-          foulsB: g.stats.foulsB
-        };
+        stats = { ...g.stats };
       } else {
         // 2. Fallback: 動態計算，避免寫死 50/50
         const tA = teams?.[teamA];
@@ -224,17 +217,17 @@ export default function TournamentBracket({
           const avgPqsB = (pqsB + pqsDefB) / 2;
           
           const goalDiff = goalsA - goalsB;
-          let possession = Math.floor(50 + (avgPqsA - avgPqsB) * 100 + goalDiff * 2 + (Math.random() - 0.5) * 8);
+          let possession = Math.floor(50 + (avgPqsA - avgPqsB) * 100 + goalDiff * 2);
           possession = Math.max(30, Math.min(70, possession));
           
-          const totalShots = Math.floor(Math.random() * 15) + 12;
+          const totalShots = 24;
           const shotsA_exp = Math.floor(totalShots * (possession / 100)) + goalsA;
           const shotsB_exp = totalShots - shotsA_exp + goalsB;
           
           const shotsA = Math.max(goalsA, shotsA_exp);
           const shotsB = Math.max(goalsB, shotsB_exp);
-          const foulsA = Math.floor(Math.random() * 8) + 6 + (possession < 45 ? 3 : 0);
-          const foulsB = Math.floor(Math.random() * 8) + 6 + (possession >= 55 ? 3 : 0);
+          const foulsA = 10 + (possession < 45 ? 3 : 0);
+          const foulsB = 10 + (possession >= 55 ? 3 : 0);
           
           stats = {
             possessionA: possession,
@@ -249,10 +242,10 @@ export default function TournamentBracket({
           stats = {
             possessionA: 50,
             possessionB: 50,
-            shotsA: goalsA + Math.floor(Math.random() * 8) + 4,
-            shotsB: goalsB + Math.floor(Math.random() * 8) + 4,
-            foulsA: Math.floor(Math.random() * 8) + 8,
-            foulsB: Math.floor(Math.random() * 8) + 8
+            shotsA: goalsA + 6,
+            shotsB: goalsB + 6,
+            foulsA: 10,
+            foulsB: 10
           };
         }
       }
@@ -270,6 +263,12 @@ export default function TournamentBracket({
       id: g.id,
       teamA,
       teamB,
+      home_team_name_en: teamA,
+      away_team_name_en: teamB,
+      home_score: g.home_score,
+      away_score: g.away_score,
+      home_scorers: g.home_scorers,
+      away_scorers: g.away_scorers,
       goalsA,
       goalsB,
       scorersA,
@@ -280,6 +279,8 @@ export default function TournamentBracket({
       time_elapsed: g.time_elapsed,
       finished: g.finished,
       local_date: g.local_date,
+      type: g.type,
+      group: g.group,
       result
     };
   };
@@ -327,7 +328,7 @@ export default function TournamentBracket({
           className={subTab === 'results' ? 'btn-primary' : 'btn-secondary'}
           style={{ padding: '8px 20px', fontSize: '13.5px' }}
         >
-          ⚽ 實時已賽賽果
+          ⚽ 已完賽比賽
         </button>
       </div>
 
@@ -335,7 +336,7 @@ export default function TournamentBracket({
       {subTab === 'bracket' && (
         <div className="glass-card animate-fade-in" style={{ padding: '24px' }}>
           <h3 style={{ fontSize: '18px', fontWeight: 800, marginBottom: '24px', textAlign: 'center' }} className="text-gradient">
-            2026 世界盃實時淘汰賽 Bracket 對陣圖
+            2026 世界盃淘汰賽對陣圖
           </h3>
           
           <div className="bracket-container" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'stretch', height: '620px', width: '100%', padding: '10px 0', gap: '10px', overflowX: 'auto' }}>
@@ -656,7 +657,7 @@ export default function TournamentBracket({
       {subTab === 'results' && (
         <div className="glass-card animate-fade-in" style={{ padding: '24px' }}>
           <h3 style={{ fontSize: '18px', fontWeight: 800, marginBottom: '20px', textAlign: 'center' }} className="text-gradient">
-            2026 世界盃實時已賽賽果與賽程
+            2026 世界盃已完賽比賽與賽程
           </h3>
           
           <div className="results-grid">
@@ -683,6 +684,15 @@ export default function TournamentBracket({
                   key={mapped.id}
                   className="glass-card team-item-hover"
                   onClick={() => isFinished && onSelectMatch(mapped)}
+                  onKeyDown={(event) => {
+                    if (isFinished && (event.key === 'Enter' || event.key === ' ')) {
+                      event.preventDefault();
+                      onSelectMatch(mapped);
+                    }
+                  }}
+                  role={isFinished ? 'button' : undefined}
+                  tabIndex={isFinished ? 0 : undefined}
+                  aria-label={isFinished ? `查看比賽詳情：${t(mapped.teamA)} 對 ${t(mapped.teamB)}` : undefined}
                   style={{ 
                     padding: '16px', 
                     paddingLeft: (isFinished || isLive) ? '20px' : '16px', // 色條佔用空間，微調 padding
@@ -704,13 +714,12 @@ export default function TournamentBracket({
                     }} />
                   )}
                   {/* Stage indicator & Badge */}
-                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', fontSize: '11px', color: 'var(--text-secondary)', marginBottom: '10px' }}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', fontSize: '13px', lineHeight: 1.5, color: 'var(--text-secondary)', marginBottom: '10px' }}>
                     <span style={{ fontWeight: 800, textTransform: 'uppercase', marginRight: '8px' }}>
                       {mapped.id}. {mapped.time_elapsed === 'notstarted' ? '未賽' : (isLive ? 'LIVE 直播中' : '完賽')} ({match.type === 'group' ? `小組賽 G組 ${match.group}` : match.group})
                     </span>
                     <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: '2px' }}>
-                      <span style={{ fontSize: '9px', opacity: 0.8 }}>當地: {mapped.local_date}</span>
-                      <span style={{ fontSize: '10px', color: 'var(--accent-blue)', fontWeight: 600 }}>台灣: {toTaiwanTime(mapped.local_date)}</span>
+                      <span style={{ fontSize: '13px', lineHeight: 1.5, color: 'var(--accent-blue)', fontWeight: 600 }}>台灣時間：{toTaiwanTime(mapped.local_date)}</span>
                     </div>
                   </div>
 
@@ -718,19 +727,19 @@ export default function TournamentBracket({
                   <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginTop: '6px' }}>
                     <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: '6px' }}>
                       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', fontWeight: mapped.result?.winner === mapped.teamA ? 800 : 400 }}>
-                        <span style={{ fontSize: '13px' }}>{t(mapped.teamA)}</span>
+                        <span style={{ fontSize: '14px', lineHeight: 1.5 }}>{t(mapped.teamA)}</span>
                         {isFinished && <span style={{ fontSize: '15px', fontWeight: 800 }}>{mapped.result.goalsA}</span>}
                       </div>
                       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', fontWeight: mapped.result?.winner === mapped.teamB ? 800 : 400 }}>
-                        <span style={{ fontSize: '13px' }}>{t(mapped.teamB)}</span>
+                        <span style={{ fontSize: '14px', lineHeight: 1.5 }}>{t(mapped.teamB)}</span>
                         {isFinished && <span style={{ fontSize: '15px', fontWeight: 800 }}>{mapped.result.goalsB}</span>}
                       </div>
                     </div>
                   </div>
 
                   {isFinished && (
-                    <div style={{ fontSize: '10px', color: 'var(--accent-blue)', textAlign: 'right', marginTop: '8px', fontWeight: 600 }}>
-                      👉 點擊查看進球球員資訊
+                    <div style={{ fontSize: '13px', lineHeight: 1.5, color: 'var(--accent-blue)', textAlign: 'right', marginTop: '8px', fontWeight: 600 }}>
+                      點擊查看比賽詳情
                     </div>
                   )}
                 </div>

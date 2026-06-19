@@ -1,14 +1,57 @@
-# 🏆 FIFA 2026 World Cup Player-Level Predictor & Simulator
+# 🏆 FIFA 2026 World Cup Player-Level Predictor & Simulator 4.0
 
 這是一個結合了 **EA Sports FC 26 (FIFA 26) 全球球員級（Player-Level）數據庫**、**雙泊松期望值比分預測模型**，以及 **React 互動式對陣圖動畫網頁** 的進階預測模擬系統。
 
 本專案擺脫了傳統單純依靠國家隊歷史勝負的 Team-Level 預測，改從每支球隊 26 人大名單的球員評分（PQS）與屬性進行底層建構。
 
+## Predictor 4.0 架構
+
+4.0 將所有預測運算集中到 Python：React 不再重算 Poisson、ELO、疲勞或 Domination，只顯示 FastAPI 回傳的版本化結果。執行期資料存放於 SQLite；原有 JSON 僅作首次啟動的唯讀種子，不會被 API 覆寫。
+
+- FastAPI：預測、賽程、同步工作、Monte Carlo、回測、模型檢討與效能監控。
+- Predictor Engine：70% Normal + 30% Domination 分布混合、Dixon-Coles、雙變量 Poisson、Confidence 與 Upset Risk。
+- External Evidence：The Odds API 去水市場共識與 70/30 校正參考；模型主值保持不變。
+- React：深色霓虹介面、完整比分矩陣、風險分析、市場證據、工作進度與 calibration。
+
+### 本機啟動
+
+```bash
+python3 -m venv .venv
+.venv/bin/pip install -e '.[dev]'
+cp .env.example .env
+.venv/bin/uvicorn backend.app.main:app --reload
+```
+
+另一個終端啟動前端：
+
+```bash
+cd frontend
+npm install
+npm run dev
+```
+
+`THE_ODDS_API_KEY` 與 `GEMINI_API_KEY` 都是選填；缺少金鑰時會使用明確的 disabled/fallback 狀態，核心預測仍可完整運作。
+
+### Public API
+
+- `GET /api/predictions`、`GET /api/predictions/{match_id}`
+- `GET /api/tournament`、`GET /api/championship-odds`
+- `POST /api/sync`、`POST /api/simulations`、`GET /api/sync-status`
+- `GET /api/backtests/summary`、`GET /api/reviews/{match_id}`、`GET /api/metrics`
+
+### 驗證
+
+```bash
+.venv/bin/pytest
+.venv/bin/ruff check backend/app backend/tests backend/alembic
+cd frontend && npm run test && npm run lint && npm run build
+```
+
 ---
 
 ## 🚀 近期重大優化與更新 (Recent Updates)
 
-1. **實裝「非線性強弱懸殊 Domination 壓制因子」**：為解決強弱極其懸殊的對局（如葡萄牙 vs 剛果）在傳統泊松模型中「最可能比分」常被 1-0、2-0 等小比分霸佔的痛點，在 Python 模擬器與前端 React 中同步導入非線性 ELO 壓制公式。當兩隊 ELO 差大於 250 時，非線性放大強隊期望進球 $\lambda$，有效推高 3-0, 3-1, 4-0 等大比分的出現概率。
+1. **重構「非線性強弱懸殊 Domination 壓制因子」**：4.0 不再直接放大最終 $\lambda$，而是將 70% Normal 比分分布與 30% Domination 分布混合，保留大比分感知並降低強隊過度樂觀。
 2. **重構 LLM 深度解析「批次打包 (Batching)」管線**：將原本「一場比賽呼叫一次 API」的循環架構，改成 10 場對局打包成一個 Batch 統一傳送，大幅降低每日 Gemini API Free Tier 額度消耗。
 3. **實作防禦性延時與 429 重試退避 (Backoff)**：移除所有非同步併發以防 429 限制，改用序列化執行且批次間 sleep 30 秒。針對 429 錯誤加入動態重試機制，可自動解析 API 回傳的 `retryDelay`（或預設 45 秒）並重試最多 3 次。
 4. **補齊缺失的真實球員身價**：針對 FC 26 官方資料庫中轉會至非歐洲主流聯賽的高齡巨星或球員（如 C 羅）身價為 0 或 NaN 的問題，設計基於球員 OVR 指級增長與年齡折損的數據科學 Fallback 估算模型，自動補齊前端顯示空白。
@@ -26,7 +69,7 @@
 
 ## 🔮 核心預測模型與演算法詳解 (Model & Algorithm Specifications)
 
-本系統的預測引擎在 Python 蒙地卡羅 10,000 次模擬器與 React 前端網頁中**達成 100% 邏輯同步**。以下為預測模型的完整數學公式與演算細節：
+本系統的預測引擎以 Python 為**唯一模型來源**；React 只顯示 FastAPI 回傳結果，因此不再存在跨語言公式漂移。以下為預測模型的完整數學公式與演算細節：
 
 ### 1. 球員級屬性實力指標 (Player-Level PQS)
 
@@ -59,7 +102,7 @@
 為解決大語言模型（LLM）連網抓取傷病資訊所造成的高昂 API Token 消耗，本專案直接透過純代碼爬蟲從 FotMob API 的 `matchDetails` 接口自動抓取最新名單：
 - **賽前傷停採集**：每次同步真實賽果時，針對近 3 天內即將進行的未來賽事，爬蟲會解析 `content.lineup.homeTeam.unavailable` 與 `content.lineup.awayTeam.unavailable`，提取狀態為受傷（`injury`）或禁賽（`suspension`）的球員名單並寫入本地 JSON 資料庫中。
 - **主力受傷剔除與板凳自動遞補**：
-  當預測引擎（Python 模擬器與前端 React）讀取該國大名單時，會比對該場對局的傷兵名單：
+  當 Python 預測引擎讀取該國大名單時，會比對該場對局的傷兵名單：
   * 受傷球員的球員效率得分直接歸零：
     $$\text{Efficiency Score}_{\text{injured}} = 0.0$$
   * 系統會將大名單中剩下的健康球員（Active Players）重新依效率評分降序排序，由板凳中實力評分最高且位置相符的球員**自動遞補進入先發前 11 人**。
@@ -96,9 +139,9 @@
 
 為解決 ELO 積分與球員 PQS 之間的多元共線性（Multicollinearity）造成的強隊戰力通膨，本系統放棄了早期憑直覺設定的固定分母，改以三大盃賽（Euro 2024, Copa América 2024, AFCON 2025-2026）共 127 場真實大賽高階數據作為訓練集，運行**極大似然估計（MLE, Maximum Likelihood Estimation）**與負對數似然損失（NLL Loss）敏感度分析，擬合出兼顧「長期戰績基本面」與「球員級物理引擎」的**黃金權重參數（$c_1 = 0.75, c_2 = 0.20$）**：
 
-$$\lambda = \max\left(0.2, \text{Base}_A + 0.75 \cdot \left(\frac{\text{ELO}_{A, \text{active}} - \text{ELO}_{B, \text{active}}}{400}\right) + 0.20 \cdot (\text{att-pqs}_{A, \text{active}} - \text{def-pqs}_{B, \text{active}})\right)$$
+$$\lambda = \max\left(0.2, \text{Base}_A + 0.75 \cdot \left(\frac{\text{ELO}_{A, \text{active}} - \text{ELO}_{B, \text{active}}}{450}\right) + 0.20 \cdot \left(\frac{\text{att-pqs}_{A, \text{active}} - \text{def-pqs}_{B, \text{active}}}{0.3}\right)\right)$$
 
-$$\mu = \max\left(0.2, \text{Base}_B - 0.75 \cdot \left(\frac{\text{ELO}_{A, \text{active}} - \text{ELO}_{B, \text{active}}}{400}\right) + 0.20 \cdot (\text{att-pqs}_{B, \text{active}} - \text{def-pqs}_{A, \text{active}})\right)$$
+$$\mu = \max\left(0.2, \text{Base}_B - 0.75 \cdot \left(\frac{\text{ELO}_{A, \text{active}} - \text{ELO}_{B, \text{active}}}{450}\right) + 0.20 \cdot \left(\frac{\text{att-pqs}_{B, \text{active}} - \text{def-pqs}_{A, \text{active}}}{0.3}\right)\right)$$
 
 *註：此黃金比例既能確保 ELO 的強大預測效力，又完美保留了本系統獨創的「球員受傷、大賽疲勞、板凳遞補」等底層物理引擎的干預能力，在數學損失值（Loss）與隨機性間取得了最佳平衡。*
 
@@ -106,13 +149,13 @@ $$\mu = \max\left(0.2, \text{Base}_B - 0.75 \cdot \left(\frac{\text{ELO}_{A, \te
   在實際比賽中，當強弱兩隊實力差距極度懸殊時，強隊有極高概率展現壓倒性統治力（開出 3-0, 3-1 等大比分）。為此，我們在基礎線性公式之上，加入了非線性的 ELO Domination 壓制因子：
   設 $\text{ELO}_{\text{diff}} = \text{ELO}_{A, \text{active}} - \text{ELO}_{B, \text{active}}$：
   * 當 $\text{ELO}_{\text{diff}} > 250$ 時：
-    $$\lambda_{\text{final}} = \lambda + (\text{ELO}_{\text{diff}} - 250) \times 0.0018$$
-    $$\mu_{\text{final}} = \max\left(0.15, \mu - (\text{ELO}_{\text{diff}} - 250) \times 0.0005\right)$$
+    $$\lambda_{\text{dom}} = \lambda + (\text{ELO}_{\text{diff}} - 250) \times 0.0018$$
+    $$\mu_{\text{dom}} = \max\left(0.15, \mu - (\text{ELO}_{\text{diff}} - 250) \times 0.0005\right)$$
   * 當 $\text{ELO}_{\text{diff}} < -250$ 時：
-    $$\mu_{\text{final}} = \mu + (-\text{ELO}_{\text{diff}} - 250) \times 0.0018$$
-    $$\lambda_{\text{final}} = \max\left(0.15, \lambda - (-\text{ELO}_{\text{diff}} - 250) \times 0.0005\right)$$
-  * 其餘情況：$\lambda_{\text{final}} = \lambda$，$\mu_{\text{final}} = \mu$。
-  *此修正能顯著提高強弱懸殊對局在最可能比分推薦中的大比分（如 3-0, 3-1）概率，使其更符合足球大賽實戰直覺。*
+    $$\mu_{\text{dom}} = \mu + (-\text{ELO}_{\text{diff}} - 250) \times 0.0018$$
+    $$\lambda_{\text{dom}} = \max\left(0.15, \lambda - (-\text{ELO}_{\text{diff}} - 250) \times 0.0005\right)$$
+  * 其餘情況：$\lambda_{\text{dom}} = \lambda$，$\mu_{\text{dom}} = \mu$。
+  * Normal 與 Domination 各自生成完整比分矩陣，最後使用 $P_{final}=0.7P_{normal}+0.3P_{dom}$ 並歸一化。*
 
 ---
 
@@ -137,17 +180,11 @@ $$P_{\text{corrected}}(x, y) = P_{\text{raw}}(x, y) \times \tau(x, y)$$
 
 ### 7. 貝氏大盤勝率融合 (Bayesian Odds Fusion)
 
-當系統串接並存在博弈市場的勝平負隱含賠率機率 $P_{\text{market}}(W_A)$、$P_{\text{market}}(D)$、$P_{\text{market}}(W_B)$ 時，我們採用貝氏定理進行融合：
-$$P_{\text{bayes}}(x, y) = \begin{cases} 
-  P_{\text{corrected}}(x, y) \times P_{\text{market}}(W_A) & \text{if } x > y \\
-  P_{\text{corrected}}(x, y) \times P_{\text{market}}(D) & \text{if } x = y \\
-  P_{\text{corrected}}(x, y) \times P_{\text{market}}(W_B) & \text{if } x < y 
-\end{cases}$$
+當存在 The Odds API 的完整 1X2 賠率時，每家莊家的隱含機率會先個別去水，再取中位數形成市場共識。參考融合值為：
 
-計算出 $P_{\text{bayes}}(x, y)$ 後，再重新進行歸一化得到最終比分機率：
-$$P_{\text{final}}(x, y) = \frac{P_{\text{bayes}}(x, y)}{\sum_{u, v} P_{\text{bayes}}(u, v)}$$
+$$P_{fused}(o)=0.7P_{model}(o)+0.3P_{market}(o),\quad o\in\{W_A,D,W_B\}$$
 
-加總比分概率矩陣即可得到最終的勝、平、負預測百分比，並依據 $P_{\text{final}}(x, y)$ 過濾出**主勝最可能比分 Top 3**、**平局最可能比分 Top 3** 與 **客勝最可能比分 Top 3**。
+比分矩陣依所屬 1X2 結果按比例縮放，使各結果加總等於 $P_{fused}(o)$，同時保留該結果內部的比分相對形狀。首頁仍以 $P_{model}$ 為主值，$P_{fused}$ 只作外部證據。
 
 ---
 
@@ -210,16 +247,17 @@ $$P_{\text{final}}(x, y) = \frac{P_{\text{bayes}}(x, y)}{\sum_{u, v} P_{\text{ba
 ## 📂 專案目錄結構
 
 - `backend/`
+  - `app/` - Predictor 4.0 FastAPI、單一預測引擎、資料來源、回測、工作與持久化服務
+  - `alembic/` - SQLite schema migrations
   - `FC26_20250921.csv` - 最新版 EA Sports FC 26 全球球員數據庫 (核心數據)
   - `generate_frontend_data.py` - 前端數據生成器 (解析 CSV 並產生 `teams_db.json`)
   - `optimize_c1_c2.py` - 基於真實大賽數據的極大似然估計（MLE）與損失函數敏感度分析腳本 (演算法調校核心)
   - `player_level_simulator.py` - Python 蒙地卡羅 10,000 次模擬器核心
   - `sync_real_games.py` - FotMob 真實數據同步爬蟲管線
 - `frontend/`
-  - `src/App.jsx` - React 前端核心邏輯與對陣圖 UI 渲染
-  - `src/components/NextMatchPredictor.jsx` - 下一場比賽超級預測器與比數 Modal
-  - `src/utils/poissonMath.js` - 雙變量泊松與 Dixon-Coles 修正前端計算庫
-  - `src/utils/simulator.js` - 前端預測模擬引擎 (與 Python 100% 邏輯同步)
+  - `src/App.jsx` - API 狀態、背景工作進度與 4.0 導覽
+  - `src/components/NextMatchPredictor.jsx` - 純 API 顯示的預測、風險、市場與比數 UI
+  - `src/components/ModelPerformance.jsx` - 回測、校準與效能監控
   - `src/utils/constants.js` - 國家中文對照表與時間轉換工具庫 (解決 HMR 衝突)
   - `src/teams_db.json` - 包含 48 隊 26 人大名單 of JSON 數據庫
   - `src/real_games_results.json` - 真實世界比賽結果與高階數據
