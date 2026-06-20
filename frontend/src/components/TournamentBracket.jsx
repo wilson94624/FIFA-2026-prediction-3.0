@@ -1,10 +1,11 @@
 import { useState } from 'react';
-import { TEAM_TRANSLATIONS, toTaiwanTime } from '../utils/constants';
+import { getTeamDisplayName, toTaiwanTime } from '../utils/constants';
 import { parseRealScorers } from '../utils/format';
+import { TeamLabel } from './Flag';
 
-// 國名與國旗轉換
+// 國名與賽程範本轉換（純文字版本供 aria-label 使用）
 const t = (name) => {
-  if (!name) return '🏳️ 待定';
+  if (!name) return '待定';
   
   // 檢查是否是匹配範本 Label
   if (
@@ -17,8 +18,14 @@ const t = (name) => {
     return translateLabel(name);
   }
   
-  const item = TEAM_TRANSLATIONS?.[name] || { cn: name, flag: '🏳️' };
-  return `${item.flag} ${item.cn}`;
+  return getTeamDisplayName(name);
+};
+
+const TeamOrSlot = ({ name }) => {
+  if (!name || name.includes('Group') || name.includes('Match') || name.includes('Runner-up') || name.includes('Winner') || name.includes('3rd')) {
+    return <span>{t(name)}</span>;
+  }
+  return <TeamLabel name={name} />;
 };
 
 // 翻譯 Matchup Template Labels 為中文
@@ -367,11 +374,11 @@ export default function TournamentBracket({
                       style={{ padding: '5px', width: '100%', cursor: m.result ? 'pointer' : 'default', borderLeft: m.result ? '3px solid var(--accent-blue)' : 'none' }}
                     >
                       <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '9.5px', color: m.result?.winner === m.teamA ? '#fff' : 'var(--text-secondary)', fontWeight: m.result?.winner === m.teamA ? 700 : 400 }}>
-                        <span style={{ textOverflow: 'ellipsis', overflow: 'hidden', whiteSpace: 'nowrap' }}>{t(m.teamA)}</span>
+                        <span style={{ textOverflow: 'ellipsis', overflow: 'hidden', whiteSpace: 'nowrap' }}><TeamOrSlot name={m.teamA} /></span>
                         <span>{m.result ? m.result.goalsA : '-'}</span>
                       </div>
                       <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '9.5px', color: m.result?.winner === m.teamB ? '#fff' : 'var(--text-secondary)', fontWeight: m.result?.winner === m.teamB ? 700 : 400, marginTop: '2px' }}>
-                        <span style={{ textOverflow: 'ellipsis', overflow: 'hidden', whiteSpace: 'nowrap' }}>{t(m.teamB)}</span>
+                        <span style={{ textOverflow: 'ellipsis', overflow: 'hidden', whiteSpace: 'nowrap' }}><TeamOrSlot name={m.teamB} /></span>
                         <span>{m.result ? m.result.goalsB : '-'}</span>
                       </div>
                     </div>
@@ -391,11 +398,11 @@ export default function TournamentBracket({
                       style={{ padding: '5px', width: '100%', cursor: m.result ? 'pointer' : 'default', borderLeft: m.result ? '3px solid var(--accent-purple)' : 'none' }}
                     >
                       <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '9.5px', color: m.result?.winner === m.teamA ? '#fff' : 'var(--text-secondary)', fontWeight: m.result?.winner === m.teamA ? 700 : 400 }}>
-                        <span style={{ textOverflow: 'ellipsis', overflow: 'hidden', whiteSpace: 'nowrap' }}>{t(m.teamA)}</span>
+                        <span style={{ textOverflow: 'ellipsis', overflow: 'hidden', whiteSpace: 'nowrap' }}><TeamOrSlot name={m.teamA} /></span>
                         <span>{m.result ? m.result.goalsA : '-'}</span>
                       </div>
                       <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '9.5px', color: m.result?.winner === m.teamB ? '#fff' : 'var(--text-secondary)', fontWeight: m.result?.winner === m.teamB ? 700 : 400, marginTop: '2px' }}>
-                        <span style={{ textOverflow: 'ellipsis', overflow: 'hidden', whiteSpace: 'nowrap' }}>{t(m.teamB)}</span>
+                        <span style={{ textOverflow: 'ellipsis', overflow: 'hidden', whiteSpace: 'nowrap' }}><TeamOrSlot name={m.teamB} /></span>
                         <span>{m.result ? m.result.goalsB : '-'}</span>
                       </div>
                     </div>
@@ -415,11 +422,11 @@ export default function TournamentBracket({
                       style={{ padding: '5px', width: '100%', cursor: m.result ? 'pointer' : 'default', borderLeft: m.result ? '3px solid var(--accent-pink)' : 'none' }}
                     >
                       <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '9.5px', color: m.result?.winner === m.teamA ? '#fff' : 'var(--text-secondary)', fontWeight: m.result?.winner === m.teamA ? 700 : 400 }}>
-                        <span style={{ textOverflow: 'ellipsis', overflow: 'hidden', whiteSpace: 'nowrap' }}>{t(m.teamA)}</span>
+                        <span style={{ textOverflow: 'ellipsis', overflow: 'hidden', whiteSpace: 'nowrap' }}><TeamOrSlot name={m.teamA} /></span>
                         <span>{m.result ? m.result.goalsA : '-'}</span>
                       </div>
                       <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '9.5px', color: m.result?.winner === m.teamB ? '#fff' : 'var(--text-secondary)', fontWeight: m.result?.winner === m.teamB ? 700 : 400, marginTop: '2px' }}>
-                        <span style={{ textOverflow: 'ellipsis', overflow: 'hidden', whiteSpace: 'nowrap' }}>{t(m.teamB)}</span>
+                        <span style={{ textOverflow: 'ellipsis', overflow: 'hidden', whiteSpace: 'nowrap' }}><TeamOrSlot name={m.teamB} /></span>
                         <span>{m.result ? m.result.goalsB : '-'}</span>
                       </div>
                     </div>
@@ -439,11 +446,11 @@ export default function TournamentBracket({
                       style={{ padding: '5px', width: '100%', cursor: m.result ? 'pointer' : 'default', borderLeft: m.result ? '4px solid var(--success)' : 'none' }}
                     >
                       <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '9.5px', color: m.result?.winner === m.teamA ? '#fff' : 'var(--text-secondary)', fontWeight: m.result?.winner === m.teamA ? 700 : 400 }}>
-                        <span style={{ textOverflow: 'ellipsis', overflow: 'hidden', whiteSpace: 'nowrap' }}>{t(m.teamA)}</span>
+                        <span style={{ textOverflow: 'ellipsis', overflow: 'hidden', whiteSpace: 'nowrap' }}><TeamOrSlot name={m.teamA} /></span>
                         <span>{m.result ? m.result.goalsA : '-'}</span>
                       </div>
                       <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '9.5px', color: m.result?.winner === m.teamB ? '#fff' : 'var(--text-secondary)', fontWeight: m.result?.winner === m.teamB ? 700 : 400, marginTop: '2px' }}>
-                        <span style={{ textOverflow: 'ellipsis', overflow: 'hidden', whiteSpace: 'nowrap' }}>{t(m.teamB)}</span>
+                        <span style={{ textOverflow: 'ellipsis', overflow: 'hidden', whiteSpace: 'nowrap' }}><TeamOrSlot name={m.teamB} /></span>
                         <span>{m.result ? m.result.goalsB : '-'}</span>
                       </div>
                     </div>
@@ -463,11 +470,11 @@ export default function TournamentBracket({
                     style={{ padding: '8px', width: '120px', cursor: finalMatch.result ? 'pointer' : 'default', border: '2px solid var(--accent-blue)', borderRadius: '8px' }}
                   >
                     <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '11px', color: finalMatch.result?.winner === finalMatch.teamA ? '#fff' : 'var(--text-secondary)', fontWeight: finalMatch.result?.winner === finalMatch.teamA ? 800 : 400 }}>
-                      <span style={{ textOverflow: 'ellipsis', overflow: 'hidden', whiteSpace: 'nowrap' }}>{t(finalMatch.teamA)}</span>
+                      <span style={{ textOverflow: 'ellipsis', overflow: 'hidden', whiteSpace: 'nowrap' }}><TeamOrSlot name={finalMatch.teamA} /></span>
                       <span>{finalMatch.result ? finalMatch.result.goalsA : '-'}</span>
                     </div>
                     <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '11px', color: finalMatch.result?.winner === finalMatch.teamB ? '#fff' : 'var(--text-secondary)', fontWeight: finalMatch.result?.winner === finalMatch.teamB ? 800 : 400, marginTop: '8px' }}>
-                      <span style={{ textOverflow: 'ellipsis', overflow: 'hidden', whiteSpace: 'nowrap' }}>{t(finalMatch.teamB)}</span>
+                      <span style={{ textOverflow: 'ellipsis', overflow: 'hidden', whiteSpace: 'nowrap' }}><TeamOrSlot name={finalMatch.teamB} /></span>
                       <span>{finalMatch.result ? finalMatch.result.goalsB : '-'}</span>
                     </div>
                   </div>
@@ -479,7 +486,7 @@ export default function TournamentBracket({
               {champion && (
                 <div className="glass-card animate-fade-in" style={{ padding: '8px 12px', width: '120px', textAlign: 'center', background: 'linear-gradient(135deg, rgba(250, 204, 21, 0.2) 0%, rgba(251, 191, 36, 0.2) 100%)', border: '1px solid #facc15', borderRadius: '8px' }}>
                   <p style={{ fontSize: '8px', color: '#fef08a', letterSpacing: '1.5px', marginBottom: '4px', fontWeight: 800 }}>🏆 CHAMPION 🏆</p>
-                  <h4 style={{ fontSize: '12px', fontWeight: 900, color: '#fef08a' }}>{t(champion)}</h4>
+                  <h4 style={{ fontSize: '12px', fontWeight: 900, color: '#fef08a' }}><TeamLabel name={champion} /></h4>
                 </div>
               )}
             </div>
@@ -498,11 +505,11 @@ export default function TournamentBracket({
                       style={{ padding: '5px', width: '100%', cursor: m.result ? 'pointer' : 'default', borderLeft: m.result ? '3px solid var(--accent-blue)' : 'none' }}
                     >
                       <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '9.5px', color: m.result?.winner === m.teamA ? '#fff' : 'var(--text-secondary)', fontWeight: m.result?.winner === m.teamA ? 700 : 400 }}>
-                        <span style={{ textOverflow: 'ellipsis', overflow: 'hidden', whiteSpace: 'nowrap' }}>{t(m.teamA)}</span>
+                        <span style={{ textOverflow: 'ellipsis', overflow: 'hidden', whiteSpace: 'nowrap' }}><TeamOrSlot name={m.teamA} /></span>
                         <span>{m.result ? m.result.goalsA : '-'}</span>
                       </div>
                       <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '9.5px', color: m.result?.winner === m.teamB ? '#fff' : 'var(--text-secondary)', fontWeight: m.result?.winner === m.teamB ? 700 : 400, marginTop: '2px' }}>
-                        <span style={{ textOverflow: 'ellipsis', overflow: 'hidden', whiteSpace: 'nowrap' }}>{t(m.teamB)}</span>
+                        <span style={{ textOverflow: 'ellipsis', overflow: 'hidden', whiteSpace: 'nowrap' }}><TeamOrSlot name={m.teamB} /></span>
                         <span>{m.result ? m.result.goalsB : '-'}</span>
                       </div>
                     </div>
@@ -522,11 +529,11 @@ export default function TournamentBracket({
                       style={{ padding: '5px', width: '100%', cursor: m.result ? 'pointer' : 'default', borderLeft: m.result ? '3px solid var(--accent-purple)' : 'none' }}
                     >
                       <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '9.5px', color: m.result?.winner === m.teamA ? '#fff' : 'var(--text-secondary)', fontWeight: m.result?.winner === m.teamA ? 700 : 400 }}>
-                        <span style={{ textOverflow: 'ellipsis', overflow: 'hidden', whiteSpace: 'nowrap' }}>{t(m.teamA)}</span>
+                        <span style={{ textOverflow: 'ellipsis', overflow: 'hidden', whiteSpace: 'nowrap' }}><TeamOrSlot name={m.teamA} /></span>
                         <span>{m.result ? m.result.goalsA : '-'}</span>
                       </div>
                       <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '9.5px', color: m.result?.winner === m.teamB ? '#fff' : 'var(--text-secondary)', fontWeight: m.result?.winner === m.teamB ? 700 : 400, marginTop: '2px' }}>
-                        <span style={{ textOverflow: 'ellipsis', overflow: 'hidden', whiteSpace: 'nowrap' }}>{t(m.teamB)}</span>
+                        <span style={{ textOverflow: 'ellipsis', overflow: 'hidden', whiteSpace: 'nowrap' }}><TeamOrSlot name={m.teamB} /></span>
                         <span>{m.result ? m.result.goalsB : '-'}</span>
                       </div>
                     </div>
@@ -546,11 +553,11 @@ export default function TournamentBracket({
                       style={{ padding: '5px', width: '100%', cursor: m.result ? 'pointer' : 'default', borderLeft: m.result ? '3px solid var(--accent-pink)' : 'none' }}
                     >
                       <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '9.5px', color: m.result?.winner === m.teamA ? '#fff' : 'var(--text-secondary)', fontWeight: m.result?.winner === m.teamA ? 700 : 400 }}>
-                        <span style={{ textOverflow: 'ellipsis', overflow: 'hidden', whiteSpace: 'nowrap' }}>{t(m.teamA)}</span>
+                        <span style={{ textOverflow: 'ellipsis', overflow: 'hidden', whiteSpace: 'nowrap' }}><TeamOrSlot name={m.teamA} /></span>
                         <span>{m.result ? m.result.goalsA : '-'}</span>
                       </div>
                       <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '9.5px', color: m.result?.winner === m.teamB ? '#fff' : 'var(--text-secondary)', fontWeight: m.result?.winner === m.teamB ? 700 : 400, marginTop: '2px' }}>
-                        <span style={{ textOverflow: 'ellipsis', overflow: 'hidden', whiteSpace: 'nowrap' }}>{t(m.teamB)}</span>
+                        <span style={{ textOverflow: 'ellipsis', overflow: 'hidden', whiteSpace: 'nowrap' }}><TeamOrSlot name={m.teamB} /></span>
                         <span>{m.result ? m.result.goalsB : '-'}</span>
                       </div>
                     </div>
@@ -570,11 +577,11 @@ export default function TournamentBracket({
                       style={{ padding: '5px', width: '100%', cursor: m.result ? 'pointer' : 'default', borderLeft: m.result ? '4px solid var(--success)' : 'none' }}
                     >
                       <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '9.5px', color: m.result?.winner === m.teamA ? '#fff' : 'var(--text-secondary)', fontWeight: m.result?.winner === m.teamA ? 700 : 400 }}>
-                        <span style={{ textOverflow: 'ellipsis', overflow: 'hidden', whiteSpace: 'nowrap' }}>{t(m.teamA)}</span>
+                        <span style={{ textOverflow: 'ellipsis', overflow: 'hidden', whiteSpace: 'nowrap' }}><TeamOrSlot name={m.teamA} /></span>
                         <span>{m.result ? m.result.goalsA : '-'}</span>
                       </div>
                       <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '9.5px', color: m.result?.winner === m.teamB ? '#fff' : 'var(--text-secondary)', fontWeight: m.result?.winner === m.teamB ? 700 : 400, marginTop: '2px' }}>
-                        <span style={{ textOverflow: 'ellipsis', overflow: 'hidden', whiteSpace: 'nowrap' }}>{t(m.teamB)}</span>
+                        <span style={{ textOverflow: 'ellipsis', overflow: 'hidden', whiteSpace: 'nowrap' }}><TeamOrSlot name={m.teamB} /></span>
                         <span>{m.result ? m.result.goalsB : '-'}</span>
                       </div>
                     </div>
@@ -639,7 +646,7 @@ export default function TournamentBracket({
                       style={{ padding: '14px 8px', cursor: 'pointer', fontWeight: 600 }}
                       onClick={() => onSelectTeam(teams[row.team])}
                     >
-                      {t(row.team)}
+                      <TeamLabel name={row.team} />
                       <span style={{ fontSize: '10px', color: 'var(--text-secondary)', marginLeft: '8px' }}>
                         OVR {row.avg_rating.toFixed(0)}
                       </span>
@@ -700,8 +707,8 @@ export default function TournamentBracket({
                       >
                         <span className="result-kickoff"><strong>{time}</strong><small>{stage}</small></span>
                         <span className="result-teams">
-                          <span className={mapped.result?.winner === mapped.teamA ? 'winner' : ''}>{t(mapped.teamA)}</span>
-                          <span className={mapped.result?.winner === mapped.teamB ? 'winner' : ''}>{t(mapped.teamB)}</span>
+                          <span className={mapped.result?.winner === mapped.teamA ? 'winner' : ''}><TeamOrSlot name={mapped.teamA} /></span>
+                          <span className={mapped.result?.winner === mapped.teamB ? 'winner' : ''}><TeamOrSlot name={mapped.teamB} /></span>
                         </span>
                         <span className="result-score" aria-label={isFinished ? `實際比分 ${mapped.goalsA} 比 ${mapped.goalsB}` : '尚未開賽'}>
                           <strong>{isFinished ? mapped.goalsA : '–'}</strong>

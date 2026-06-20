@@ -1,12 +1,8 @@
 import { useMemo, useState } from 'react';
 import { formatTaiwanTime, TEAM_TRANSLATIONS } from '../utils/constants';
+import { TeamLabel } from './Flag';
 
 const SIMULATION_RUNS = 10_000;
-
-const label = (name) => {
-  const team = TEAM_TRANSLATIONS[name] || { flag: '🏳️', cn: name };
-  return `${team.flag} ${team.cn}`;
-};
 
 const percent = (value) => `${Number(value || 0).toFixed(1)}%`;
 
@@ -27,8 +23,8 @@ function OddsTopFive({ probabilities }) {
       {probabilities.slice(0, 5).map((item, index) => (
         <div className={`championship-rank-row rank-${index + 1}`} key={item.team_name}>
           <span className="championship-rank">{index + 1}</span>
-          <strong>{label(item.team_name)}</strong>
-          <div className="championship-bar" aria-label={`${label(item.team_name)}奪冠機率 ${percent(item.Winner_pct)}`}>
+          <strong><TeamLabel name={item.team_name} /></strong>
+          <div className="championship-bar" aria-label={`${TEAM_TRANSLATIONS[item.team_name]?.cn || item.team_name}奪冠機率 ${percent(item.Winner_pct)}`}>
             <i style={{ width: `${Math.max(2, Number(item.Winner_pct || 0) / leader * 100)}%` }} />
           </div>
           <b>{percent(item.Winner_pct)}</b>
@@ -80,7 +76,7 @@ export default function ChampionshipOdds({ data, variant = 'full', onViewAll }) 
         {probabilities.slice(0, 3).map((item, index) => (
           <article className={`podium-team rank-${index + 1}`} key={item.team_name}>
             <span>#{index + 1}</span>
-            <strong>{label(item.team_name)}</strong>
+            <strong><TeamLabel name={item.team_name} /></strong>
             <b>{percent(item.Winner_pct)}</b>
             <small>奪冠機率</small>
           </article>
@@ -113,7 +109,7 @@ export default function ChampionshipOdds({ data, variant = 'full', onViewAll }) 
               return (
                 <tr className={rank <= 3 ? `top-team rank-${rank}` : ''} key={item.team_name}>
                   <td><span className="table-rank">{rank}</span></td>
-                  <td><strong>{label(item.team_name)}</strong></td>
+                  <td><strong><TeamLabel name={item.team_name} /></strong></td>
                   <td>
                     <div className="table-champion-cell">
                       <div className="championship-bar"><i style={{ width: `${Math.max(1, Number(item.Winner_pct || 0) / leader * 100)}%` }} /></div>

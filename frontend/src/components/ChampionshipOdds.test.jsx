@@ -24,8 +24,8 @@ describe('ChampionshipOdds', () => {
     const onViewAll = vi.fn();
     render(<ChampionshipOdds data={data} variant="summary" onViewAll={onViewAll} />);
 
-    expect(screen.getByText('🇦🇷 阿根廷')).toBeInTheDocument();
-    expect(screen.queryByText('🇵🇹 葡萄牙')).not.toBeInTheDocument();
+    expect(screen.getByText('阿根廷')).toBeInTheDocument();
+    expect(screen.queryByText('葡萄牙')).not.toBeInTheDocument();
     fireEvent.click(screen.getByRole('button', { name: '查看全部' }));
     expect(onViewAll).toHaveBeenCalledOnce();
   });
@@ -36,7 +36,7 @@ describe('ChampionshipOdds', () => {
     expect(screen.getByRole('heading', { name: '48 隊奪冠與晉級機率' })).toBeInTheDocument();
     expect(screen.getByRole('columnheader', { name: '冠軍機率' })).toBeInTheDocument();
     expect(screen.getByRole('columnheader', { name: '三十二強' })).toBeInTheDocument();
-    expect(screen.getByText('🇵🇹 葡萄牙')).toBeInTheDocument();
+    expect(screen.getByText('葡萄牙')).toBeInTheDocument();
     expect(screen.getByText('10,000')).toBeInTheDocument();
   });
 });

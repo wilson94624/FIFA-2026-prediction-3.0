@@ -295,6 +295,9 @@ textarea:focus-visible {
 .upcoming-card { width: 100%; text-align: left; padding: 12px; color: var(--text-primary); background: var(--color-bg-surface); border: var(--border-default); border-radius: var(--radius-md); cursor: pointer; transition: background-color .16s ease, border-color .16s ease; }
 .upcoming-card span, .upcoming-card small { display: block; color: var(--text-secondary); font-size: 11px; }
 .upcoming-card strong { display: flex; justify-content: space-between; gap: 5px; margin: 8px 0; font-size: 13px; }
+.upcoming-card .upcoming-match-teams { align-items: center; font-weight: 700; }
+.upcoming-card .upcoming-match-teams .team-label { display: inline-flex; min-width: 0; max-width: calc((100% - 28px) / 2); color: inherit; font-size: inherit; font-weight: inherit; }
+.upcoming-card .upcoming-match-teams .team-label-name { display: inline; min-width: 0; overflow: hidden; color: inherit; font-size: inherit; font-weight: inherit; text-overflow: ellipsis; }
 .upcoming-card i { color: var(--text-secondary); font-style: normal; font-weight: 400; }
 .upcoming-card:hover { background: var(--color-bg-elevated); border-color: var(--color-border-strong); }
 .upcoming-card.active { border-color: var(--color-brand-primary); background: var(--color-bg-selected); }
@@ -1128,3 +1131,9 @@ textarea:focus-visible {
   .system-updated { display: none; }
   .system-status-grid { grid-template-columns: 1fr; gap: var(--space-8); }
 }
+
+/* Cross-platform SVG flags. Dimensions mirror the previous inline emoji footprint. */
+.team-label { display: inline-flex; align-items: center; gap: .32em; max-width: 100%; vertical-align: -.08em; white-space: nowrap; }
+.team-label-name { min-width: 0; }
+.country-flag { display: inline-block; width: 1.25em; height: .9em; flex: 0 0 auto; object-fit: cover; border-radius: 2px; box-shadow: 0 0 0 1px rgba(255,255,255,.18); }
+.country-flag-fallback { background: linear-gradient(135deg, rgba(148,163,184,.4), rgba(71,85,105,.5)); border: 1px solid rgba(255,255,255,.18); }

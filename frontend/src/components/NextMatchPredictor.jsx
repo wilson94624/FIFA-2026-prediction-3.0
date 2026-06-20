@@ -1,12 +1,8 @@
 import { useMemo, useRef, useState } from 'react';
-import { formatTaiwanTime, TEAM_TRANSLATIONS, toTaiwanTime } from '../utils/constants';
+import { formatTaiwanTime, toTaiwanTime } from '../utils/constants';
 import ChampionshipOdds from './ChampionshipOdds';
+import { TeamLabel } from './Flag';
 import { ScoreMatrixModal } from './Modals';
-
-const teamLabel = (name) => {
-  const team = TEAM_TRANSLATIONS[name] || { flag: '🏳️', cn: name };
-  return `${team.flag} ${team.cn}`;
-};
 
 const scoreLabel = (score) => `${score.home} : ${score.away}`;
 
@@ -75,8 +71,8 @@ function AvailabilityCard({ match, prediction }) {
       </div>
       {sourceAvailable ? (
         <div className="availability-grid">
-          {renderSide('home', `${teamLabel(prediction.home)} 缺陣`)}
-          {renderSide('away', `${teamLabel(prediction.away)} 缺陣`)}
+          {renderSide('home', <><TeamLabel name={prediction.home} /> 缺陣</>)}
+          {renderSide('away', <><TeamLabel name={prediction.away} /> 缺陣</>)}
         </div>
       ) : <p className="availability-unavailable">傷停資料暫時無法取得</p>}
     </section>
@@ -117,7 +113,7 @@ function MarketEvidence({ prediction }) {
           const display = valueDisplay(values[key] || 0);
           return (
             <div key={key}>
-              <span>{key === 'home' ? teamLabel(prediction.home) : key === 'away' ? teamLabel(prediction.away) : '🤝 和局'}</span>
+              <span>{key === 'home' ? <TeamLabel name={prediction.home} /> : key === 'away' ? <TeamLabel name={prediction.away} /> : '🤝 和局'}</span>
               <strong>{market.consensus[key].toFixed(1)}%</strong>
               <small className={display.tone}>{display.text}</small>
               {fused && <em>融合參考 {fused[key].toFixed(1)}%</em>}
@@ -194,7 +190,7 @@ export default function NextMatchPredictor({ loading, predictions, championship,
               onClick={() => setSelectedId(item.match_id)}
             >
               <span>Match #{item.match_id} · {item.group ? `${item.group}組` : item.stage}</span>
-              <strong>{teamLabel(item.home)} <i>vs</i> {teamLabel(item.away)}</strong>
+              <strong className="upcoming-match-teams"><TeamLabel name={item.home} /> <i>vs</i> <TeamLabel name={item.away} /></strong>
               <small>{toTaiwanTime(item.local_date)}</small>
             </button>
           ))}
@@ -222,7 +218,7 @@ export default function NextMatchPredictor({ loading, predictions, championship,
 
           <div className="featured-match-grid">
             <div className="featured-team home-team">
-              <h3>{teamLabel(selected.home)}</h3>
+              <h3><TeamLabel name={selected.home} /></h3>
               <p>FIFA #{homeTeam.fifa_rank || '—'} · ELO {Math.round(homeTeam.fifa_points || 0)}</p>
               <small>預期進球 {model.expected_goals.home.toFixed(2)} · 疲勞 {(model.inputs.fatigue.home * 100).toFixed(1)}%</small>
             </div>
@@ -232,7 +228,7 @@ export default function NextMatchPredictor({ loading, predictions, championship,
               <small>最可能比分</small>
             </div>
             <div className="featured-team away-team">
-              <h3>{teamLabel(selected.away)}</h3>
+              <h3><TeamLabel name={selected.away} /></h3>
               <p>FIFA #{awayTeam.fifa_rank || '—'} · ELO {Math.round(awayTeam.fifa_points || 0)}</p>
               <small>預期進球 {model.expected_goals.away.toFixed(2)} · 疲勞 {(model.inputs.fatigue.away * 100).toFixed(1)}%</small>
             </div>
@@ -244,9 +240,9 @@ export default function NextMatchPredictor({ loading, predictions, championship,
               <button className="text-button" onClick={() => setShowMatrix(true)}>完整比分矩陣</button>
             </div>
             <div className="probability-values">
-              <div className="home"><span>{teamLabel(selected.home)} 勝</span><strong>{model.probabilities.home.toFixed(1)}%</strong></div>
+              <div className="home"><span><TeamLabel name={selected.home} /> 勝</span><strong>{model.probabilities.home.toFixed(1)}%</strong></div>
               <div className="draw"><span>和局</span><strong>{model.probabilities.draw.toFixed(1)}%</strong></div>
-              <div className="away"><span>{teamLabel(selected.away)} 勝</span><strong>{model.probabilities.away.toFixed(1)}%</strong></div>
+              <div className="away"><span><TeamLabel name={selected.away} /> 勝</span><strong>{model.probabilities.away.toFixed(1)}%</strong></div>
             </div>
             <div className="probability-bar" aria-hidden="true">
               <span className="home" style={{ width: `${model.probabilities.home}%` }} />
@@ -261,9 +257,9 @@ export default function NextMatchPredictor({ loading, predictions, championship,
           </div>
 
           <div className="score-columns">
-            <ScoreColumn title={`${teamLabel(selected.home)} Top 3`} scores={top.home} tone="home" />
+            <ScoreColumn title={<><TeamLabel name={selected.home} /> Top 3</>} scores={top.home} tone="home" />
             <ScoreColumn title="和局 Top 3" scores={top.draw} tone="draw" />
-            <ScoreColumn title={`${teamLabel(selected.away)} Top 3`} scores={top.away} tone="away" />
+            <ScoreColumn title={<><TeamLabel name={selected.away} /> Top 3</>} scores={top.away} tone="away" />
           </div>
         </section>
 
@@ -295,9 +291,9 @@ export default function NextMatchPredictor({ loading, predictions, championship,
           <p>{selected.group ? `${selected.group} 組小組賽` : selected.stage} · MATCH #{selected.match_id}</p>
         </header>
         <div className="share-teams">
-          <section><h2>{teamLabel(selected.home)}</h2><p>FIFA 世界排名 #{homeTeam.fifa_rank || '—'}</p></section>
+          <section><h2><TeamLabel name={selected.home} /></h2><p>FIFA 世界排名 #{homeTeam.fifa_rank || '—'}</p></section>
           <div><span>預測比分</span><strong>{model.predicted_score.home}:{model.predicted_score.away}</strong></div>
-          <section><h2>{teamLabel(selected.away)}</h2><p>FIFA 世界排名 #{awayTeam.fifa_rank || '—'}</p></section>
+          <section><h2><TeamLabel name={selected.away} /></h2><p>FIFA 世界排名 #{awayTeam.fifa_rank || '—'}</p></section>
         </div>
         <div className="share-probabilities">
           <div><span>主勝</span><strong>{model.probabilities.home.toFixed(1)}%</strong></div>

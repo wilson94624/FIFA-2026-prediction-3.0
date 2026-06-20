@@ -78,7 +78,7 @@ describe('App', () => {
     await screen.findByText('勝平負機率');
     fireEvent.click(screen.getByRole('button', { name: '賽程' }));
     await screen.findByText('2026 世界盃賽程與賽果');
-    fireEvent.click(await screen.findByRole('button', { name: '查看比賽詳情：🇨🇭 瑞士 對 🇧🇦 波赫，比分 2 比 1' }));
+    fireEvent.click(await screen.findByRole('button', { name: '查看比賽詳情：瑞士 對 波赫，比分 2 比 1' }));
     expect(await screen.findByRole('dialog', { name: '比賽詳情' })).toBeInTheDocument();
     expect(await screen.findByLabelText('勝負方向命中')).toBeInTheDocument();
     expect(await screen.findByLabelText('比分未命中')).toBeInTheDocument();
