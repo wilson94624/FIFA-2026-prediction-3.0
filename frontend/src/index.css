@@ -321,7 +321,7 @@ textarea:focus-visible {
 .probability-heading { display: flex; justify-content: space-between; gap: var(--space-12); align-items: center; margin-bottom: var(--space-12); }
 .probability-heading h2 { font-size: var(--font-size-h3); }
 .probability-values { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: var(--space-8); margin-bottom: var(--space-12); }
-.probability-values > div { min-width: 0; }
+.probability-values > div { display: grid; grid-template-rows: minmax(0, 1fr) auto; align-items: end; min-width: 0; }
 .probability-values span { display: block; overflow: hidden; color: var(--color-text-secondary); font-size: var(--font-size-caption); text-overflow: ellipsis; white-space: nowrap; }
 .probability-values strong { display: block; margin-top: var(--space-2); font-size: 24px; line-height: 1.25; font-variant-numeric: tabular-nums; }
 .probability-values .draw { text-align: center; }
