@@ -1,9 +1,4 @@
-import { TEAM_TRANSLATIONS } from '../utils/constants';
-
-const label = (name) => {
-  const team = TEAM_TRANSLATIONS[name] || { flag: '🏳️', cn: name };
-  return `${team.flag} ${team.cn}`;
-};
+import { TeamLabel } from './Flag';
 
 function ModalShell({ children, onClose, title, panelClassName = '', backdropClassName = '' }) {
   return (
@@ -23,7 +18,7 @@ export function ScoreMatrixModal({ prediction, open, onClose }) {
     <ModalShell onClose={onClose} title="完整比分機率矩陣">
       <p className="eyebrow">DIXON-COLES · BIVARIATE POISSON</p>
       <h2>📊 0–5 完整比分機率矩陣</h2>
-      <p>{label(prediction.home)} vs {label(prediction.away)} · 合計 100%</p>
+      <p><TeamLabel name={prediction.home} /> vs <TeamLabel name={prediction.away} /> · 合計 100%</p>
       <div className="matrix-table-wrap">
         <table className="matrix-table">
           <thead><tr><th>主\客</th>{[0, 1, 2, 3, 4, 5].map((goal) => <th key={goal}>{goal}</th>)}</tr></thead>
@@ -74,9 +69,9 @@ export function MatchDetailModal({ selectedMatch, prediction, review, loading, o
       </header>
 
       <div className="detail-scoreboard">
-        <div><span>{label(selectedMatch.home_team_name_en)}</span><strong>{finished ? selectedMatch.home_score : '—'}</strong></div>
+        <div><span><TeamLabel name={selectedMatch.home_team_name_en} /></span><strong>{finished ? selectedMatch.home_score : '—'}</strong></div>
         <span className="detail-score-separator">:</span>
-        <div><span>{label(selectedMatch.away_team_name_en)}</span><strong>{finished ? selectedMatch.away_score : '—'}</strong></div>
+        <div><span><TeamLabel name={selectedMatch.away_team_name_en} /></span><strong>{finished ? selectedMatch.away_score : '—'}</strong></div>
       </div>
 
       {loading && <div className="detail-loading">正在載入賽前預測與賽後檢討…</div>}
@@ -129,7 +124,7 @@ export function TeamRosterModal({ selectedTeam, onClose }) {
   return (
     <ModalShell onClose={onClose} title="國家隊名單">
       <p className="eyebrow">FC26 PLAYER DATABASE</p>
-      <h2>{label(selectedTeam.team_name)} 國家隊名單</h2>
+      <h2><TeamLabel name={selectedTeam.team_name} /> 國家隊名單</h2>
       <p>先發 PQS {selectedTeam.starting_pqs?.toFixed(2)} · 替補 PQS {selectedTeam.bench_pqs?.toFixed(2)} · 身價 €{selectedTeam.market_value_million_eur?.toFixed(1)}M</p>
       <div className="roster-list">
         {players.map((player) => (
