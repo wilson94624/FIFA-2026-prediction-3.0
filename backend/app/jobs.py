@@ -12,8 +12,8 @@ from sqlalchemy import select
 from sqlalchemy.orm import Session
 
 from .db import SessionLocal
-from .models import JobRecord
-from .services import run_simulation_pipeline, run_sync_pipeline
+from .models import JobRecord, SnapshotRecord
+from .services import run_simulation_pipeline, run_sync_pipeline, simulation_input_hash
 
 executor = ThreadPoolExecutor(max_workers=1, thread_name_prefix="predictor-job")
 submit_lock = Lock()
@@ -92,6 +92,32 @@ def create_or_reuse_job(session: Session, job_type: str) -> tuple[dict[str, Any]
         )
         if active:
             return serialize_job(active), True
+        if job_type == "simulation":
+            current_input_hash = simulation_input_hash(session)
+            snapshot = session.scalar(
+                select(SnapshotRecord).where(SnapshotRecord.key == "championship_odds")
+            )
+            snapshot_payload = dict(snapshot.payload or {}) if snapshot else {}
+            if snapshot_payload.get("input_hash") == current_input_hash:
+                job = JobRecord(
+                    id=str(uuid4()),
+                    job_type="simulation",
+                    status="completed",
+                    progress=100,
+                    stage="snapshot_reused",
+                    message=json.dumps(
+                        {
+                            "input_hash": current_input_hash,
+                            "snapshot_last_updated": snapshot_payload.get("last_updated"),
+                            "snapshot_reused": True,
+                        },
+                        ensure_ascii=False,
+                    ),
+                )
+                session.add(job)
+                session.commit()
+                session.refresh(job)
+                return serialize_job(job), True
         job = JobRecord(
             id=str(uuid4()),
             job_type=job_type,

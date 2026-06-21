@@ -44,6 +44,12 @@ const parseJobResult = (message) => {
   }
 };
 
+const isSnapshotReuse = (job) => (
+  job?.job_type === 'simulation'
+  && job?.status === 'completed'
+  && (job?.stage === 'snapshot_reused' || parseJobResult(job?.message)?.snapshot_reused === true)
+);
+
 const jobMessage = (job) => {
   if (job.status === 'failed') {
     return job.job_type === 'simulation' ? '奪冠機率模擬失敗' : '賽事資料更新失敗';
@@ -219,13 +225,15 @@ export default function App() {
       {job && (
         <section className={`job-banner ${job.status}`} aria-live="polite">
           <div>
-            <strong>{jobMessage(job)}</strong>
-            <span>
-              {JOB_STAGE_LABELS[job.stage] || job.stage} · {job.progress}%
-              {job.status === 'completed' && job.updated_at
-                ? ` · 完成時間 ${formatTaiwanTime(job.updated_at)}`
-                : ''}
-            </span>
+            <strong>{isSnapshotReuse(job) ? '預測快照已驗證' : jobMessage(job)}</strong>
+            <div className="job-banner-meta">
+              <span>
+                {isSnapshotReuse(job)
+                  ? '目前資料未變更，沿用最新模擬結果'
+                  : `${JOB_STAGE_LABELS[job.stage] || job.stage} · ${job.progress}%${job.status === 'completed' && job.updated_at ? ` · 完成時間 ${formatTaiwanTime(job.updated_at)}` : ''}`}
+              </span>
+              {isSnapshotReuse(job) && <span className="job-cache-hit">✓ 快取命中</span>}
+            </div>
           </div>
           <div className="job-progress"><span style={{ width: `${job.progress}%` }} /></div>
           {job.error && <p>{jobError(job.error)}</p>}
