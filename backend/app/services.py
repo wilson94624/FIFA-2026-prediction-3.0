@@ -46,6 +46,7 @@ CHAMPIONSHIP_SIMULATION_RUNS = 10_000
 _cache = {"hits": 0, "misses": 0}
 logger = logging.getLogger(__name__)
 TOURNAMENT_TIMEZONE = timezone(timedelta(hours=-4))
+MATCH_TIMING_FIELDS = ("kickoff_utc", "kickoff_source", "kickoff_status")
 RETRYABLE_ERRORS = (
     ConnectionResetError,
     TimeoutError,
@@ -167,6 +168,7 @@ def all_matches(session: Session) -> list[dict[str, Any]]:
     matches = [
         {
             **record.payload,
+            **{key: record.payload.get(key) for key in MATCH_TIMING_FIELDS},
             "metadata": metadata(
                 record.source,
                 record.confidence,
@@ -178,6 +180,18 @@ def all_matches(session: Session) -> list[dict[str, Any]]:
         for record in records
     ]
     return sorted(matches, key=lambda match: parse_match_date(match.get("local_date")))
+
+
+def _merge_match_timing(payload: dict[str, Any], match: dict[str, Any]) -> bool:
+    changed = False
+    for key in MATCH_TIMING_FIELDS:
+        if key in match and payload.get(key) != match.get(key):
+            payload[key] = match.get(key)
+            changed = True
+        elif key not in payload:
+            payload[key] = None
+            changed = True
+    return changed
 
 
 def raw_matches(session: Session) -> list[dict[str, Any]]:
@@ -282,6 +296,10 @@ def _market_for_match(session: Session, match: dict[str, Any]) -> dict[str, Any]
 
 
 def _kickoff_utc(match: dict[str, Any]) -> datetime | None:
+    if match.get("kickoff_utc"):
+        parsed = _parse_utc_datetime(match.get("kickoff_utc"))
+        if parsed:
+            return parsed
     kickoff = parse_match_date(match.get("local_date"))
     if kickoff == datetime.max:
         return None
@@ -370,7 +388,11 @@ def prediction_for_match(
     existing = session.scalar(select(PredictionRecord).where(PredictionRecord.match_id == match_id))
     if existing and existing.input_version == version and not force:
         _cache["hits"] += 1
-        return dict(existing.payload)
+        payload = dict(existing.payload)
+        if _merge_match_timing(payload, match):
+            existing.payload = payload
+            session.commit()
+        return payload
     _cache["misses"] += 1
 
     prediction = predict_match(
@@ -391,6 +413,7 @@ def prediction_for_match(
             "generated_by": "gemini" if analyses.get(match_id, {}).get("llm_analysis") else "rules",
             "factors": prediction["model"]["upset_risk"]["factors"],
         }
+    _merge_match_timing(prediction, match)
     prediction["metadata"] = metadata("predictor_engine", 0.9)
     if existing:
         existing.input_version = version
@@ -563,7 +586,16 @@ def refresh_fotmob_stats(session: Session, progress: Callable[[int, str, str], N
             or stats.get("fotmob_status") in {"partial", "pending"}
         )
         needs_nearby_data = is_near and not stats.get("fotmob_complete")
-        if needs_finished_stats or needs_nearby_data:
+        needs_confirmed_kickoff = (
+            not game.get("kickoff_utc")
+            and str(stats.get("fotmob_match_id") or "").strip()
+            and (
+                is_near
+                or is_finished
+                or stats.get("fotmob_complete")
+            )
+        )
+        if needs_finished_stats or needs_nearby_data or needs_confirmed_kickoff:
             candidates.append(record)
 
     updated = 0
@@ -587,13 +619,20 @@ def refresh_fotmob_stats(session: Session, progress: Callable[[int, str, str], N
         if isinstance(fetched, dict) and fetched:
             payload = dict(record.payload or {})
             previous_stats = payload.get("stats") or {}
-            merged_stats = {**previous_stats, **fetched}
+            timing = {
+                key: value for key in MATCH_TIMING_FIELDS if (value := fetched.get(key))
+            }
+            stats_payload = {
+                key: value for key, value in fetched.items() if key not in MATCH_TIMING_FIELDS
+            }
+            merged_stats = {**previous_stats, **stats_payload}
             # Partial retries may fill different fields over time; retain previously known
             # primary values, while allowing missing cards to remain unknown instead of zero.
             for key in PRIMARY_STATS:
                 if fetched.get(key) is None and previous_stats.get(key) is not None:
                     merged_stats[key] = previous_stats[key]
             payload["stats"] = with_fotmob_status(merged_stats)
+            payload.update(timing)
             record.payload = payload
             record.source = "worldcup26_api+fotmob"
             record.fetched_at = now()
@@ -626,6 +665,10 @@ def _normalize_remote_game(game: dict[str, Any]) -> dict[str, Any]:
         game.get("away_team_name_en"), game.get("away_team_name_en")
     )
     normalized["finished"] = "TRUE" if game.get("finished") in {"TRUE", True} else "FALSE"
+    if normalized.get("local_date") and not any(
+        normalized.get(key) for key in ("kickoff", "kickoff_time", "date", "kickoff_utc")
+    ):
+        normalized["kickoff_status"] = "local_time_timezone_missing"
     return normalized
 
 
@@ -662,6 +705,10 @@ def sync_remote_matches(session: Session, progress: Callable[[int, str, str], No
         previous_payload = previous.payload or {} if previous else {}
         if previous and previous_payload.get("stats") and not game.get("stats"):
             game["stats"] = previous_payload["stats"]
+        if previous and previous_payload.get("kickoff_utc") and not game.get("kickoff_utc"):
+            for key in MATCH_TIMING_FIELDS:
+                if previous_payload.get(key):
+                    game[key] = previous_payload[key]
         if previous:
             previous.payload = game
             previous.source = "worldcup26_api"

@@ -1,5 +1,10 @@
 import { useState } from 'react';
-import { getTeamDisplayName, toTaiwanTime } from '../utils/constants';
+import {
+  formatMatchTaiwanClock,
+  formatMatchTaiwanDate,
+  formatMatchTaiwanTime,
+  getTeamDisplayName,
+} from '../utils/constants';
 import { parseRealScorers } from '../utils/format';
 import { TeamLabel } from './Flag';
 
@@ -287,6 +292,9 @@ export default function TournamentBracket({
       time_elapsed: g.time_elapsed,
       finished: g.finished,
       local_date: g.local_date,
+      kickoff_utc: g.kickoff_utc,
+      kickoff_status: g.kickoff_status,
+      kickoff_source: g.kickoff_source,
       type: g.type,
       group: g.group,
       result
@@ -315,9 +323,9 @@ export default function TournamentBracket({
     realGames
       .map(mapRealMatch)
       .filter(Boolean)
-      .sort((a, b) => toTaiwanTime(a.local_date).localeCompare(toTaiwanTime(b.local_date)))
+      .sort((a, b) => formatMatchTaiwanTime(a).localeCompare(formatMatchTaiwanTime(b)))
       .reduce((groupsByDate, match) => {
-        const dateKey = toTaiwanTime(match.local_date).split(' ')[0] || '日期待定';
+        const dateKey = formatMatchTaiwanDate(match);
         groupsByDate[dateKey] = [...(groupsByDate[dateKey] || []), match];
         return groupsByDate;
       }, {}),
@@ -694,7 +702,7 @@ export default function TournamentBracket({
                   {matchesOnDate.map((mapped) => {
                     const isFinished = mapped.finished === 'TRUE' || mapped.finished === true || mapped.time_elapsed === 'finished';
                     const isLive = mapped.time_elapsed === 'live';
-                    const time = toTaiwanTime(mapped.local_date).split(' ')[1] || '—';
+                    const time = formatMatchTaiwanClock(mapped);
                     const stage = mapped.type === 'group' ? `${mapped.group || '—'}組` : (mapped.group || mapped.type || '淘汰賽');
                     return (
                       <button

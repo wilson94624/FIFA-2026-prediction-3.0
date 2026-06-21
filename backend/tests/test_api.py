@@ -21,9 +21,11 @@ def test_health_and_prediction_contract():
             and item.get("home_team_name_en") in tournament.json()["teams"]
             and item.get("away_team_name_en") in tournament.json()["teams"]
         )
+        assert {"kickoff_utc", "kickoff_status", "kickoff_source"}.issubset(match)
         response = client.get(f"/api/predictions/{match['id']}")
         assert response.status_code == 200
         payload = response.json()
+        assert {"kickoff_utc", "kickoff_status", "kickoff_source"}.issubset(payload)
         assert set(payload["model"]["probabilities"]) == {"home", "draw", "away"}
         assert len(payload["model"]["score_matrix"]) == 36
 

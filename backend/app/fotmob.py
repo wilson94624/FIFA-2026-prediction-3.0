@@ -178,6 +178,32 @@ def _event_summary(detail: dict[str, Any]) -> dict[str, Any]:
     return {"substitutions": substitutions, "injury_events": injury_events}
 
 
+def _kickoff_metadata(detail: dict[str, Any]) -> dict[str, str]:
+    header = detail.get("header") or {}
+    status = header.get("status") or {} if isinstance(header, dict) else {}
+    utc_time = status.get("utcTime") if isinstance(status, dict) else None
+    if isinstance(utc_time, str) and utc_time:
+        return {
+            "kickoff_utc": utc_time.replace(".000Z", "Z"),
+            "kickoff_source": "fotmob",
+            "kickoff_status": "confirmed",
+        }
+
+    general = detail.get("general") or {}
+    match_time = general.get("matchTimeUTC") if isinstance(general, dict) else None
+    if isinstance(match_time, str) and match_time.endswith(" UTC"):
+        try:
+            parsed = datetime.strptime(match_time, "%a, %b %d, %Y, %H:%M UTC")
+        except ValueError:
+            return {}
+        return {
+            "kickoff_utc": parsed.replace(tzinfo=UTC).isoformat().replace("+00:00", "Z"),
+            "kickoff_source": "fotmob",
+            "kickoff_status": "confirmed",
+        }
+    return {}
+
+
 def _parse_match_stats(
     detail: dict[str, Any], match_id: str, reversed_teams: bool = False
 ) -> dict[str, Any]:
@@ -219,6 +245,7 @@ def _parse_match_stats(
         "unavailable_players": unavailable,
         "fotmob_match_id": match_id,
         "fotmob_fetched_at": datetime.now(UTC).isoformat(),
+        **_kickoff_metadata(detail),
     })
 
 

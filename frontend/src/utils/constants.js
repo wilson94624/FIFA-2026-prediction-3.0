@@ -94,3 +94,38 @@ export const toTaiwanTime = (localDateStr) => {
   const [, month, day, year, hour, minute] = match;
   return formatTaiwanTime(`${year}-${month}-${day}T${hour}:${minute}:00-04:00`);
 };
+
+export const TIME_PENDING_LABEL = '時間待確認';
+
+export const formatMatchTaiwanTime = (matchOrLocalDate) => {
+  if (!matchOrLocalDate) return '';
+  if (typeof matchOrLocalDate !== 'object') {
+    return toTaiwanTime(matchOrLocalDate);
+  }
+  if (matchOrLocalDate.kickoff_utc) {
+    return formatTaiwanTime(matchOrLocalDate.kickoff_utc);
+  }
+  if (matchOrLocalDate.kickoff_status === 'local_time_timezone_missing') {
+    return TIME_PENDING_LABEL;
+  }
+  return toTaiwanTime(matchOrLocalDate.local_date);
+};
+
+export const formatMatchTaiwanDate = (match) => {
+  const formatted = formatMatchTaiwanTime(match);
+  if (!formatted || formatted === TIME_PENDING_LABEL) return formatted || '日期待定';
+  return formatted.split(' ')[0] || '日期待定';
+};
+
+export const formatMatchTaiwanClock = (match) => {
+  const formatted = formatMatchTaiwanTime(match);
+  if (!formatted) return '—';
+  if (formatted === TIME_PENDING_LABEL) return TIME_PENDING_LABEL;
+  return formatted.split(' ')[1] || '—';
+};
+
+export const matchDateTimeValue = (match) => {
+  if (!match) return '';
+  if (typeof match !== 'object') return match || '';
+  return match.kickoff_utc || match.local_date || '';
+};
