@@ -165,8 +165,9 @@ def test_simulation_pipeline_uses_latest_database_matches(monkeypatch):
         seen["boost_games"] = games
         return teams
 
-    def simulate(_teams, games):
+    def simulate(_teams, games, lookup):
         seen["simulation_games"] = games
+        seen["simulation_lookup"] = lookup
         return {
             "R32": ["A", "B"],
             "R16": ["A"],
@@ -184,4 +185,5 @@ def test_simulation_pipeline_uses_latest_database_matches(monkeypatch):
     assert result == {"runs": 10_000, "teams": 2}
     assert seen["boost_games"] is latest_db_games
     assert seen["simulation_games"] is latest_db_games
+    assert seen["simulation_lookup"]["finished"]
     assert snapshot.source == "backend_monte_carlo"

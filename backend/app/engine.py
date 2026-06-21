@@ -200,15 +200,20 @@ def score_matrix(home_rate: float, away_rate: float) -> list[dict[str, float | i
     shared = max(0.0, min(GAMMA, home_rate - 0.01, away_rate - 0.01))
     home_independent = home_rate - shared
     away_independent = away_rate - shared
+    # Each component PMF is reused across multiple score cells. Compute it once per
+    # matrix while preserving the existing Poisson formula and summation order.
+    home_pmfs = [_poisson_pmf(k, home_independent) for k in range(MAX_GOALS + 1)]
+    away_pmfs = [_poisson_pmf(k, away_independent) for k in range(MAX_GOALS + 1)]
+    shared_pmfs = [_poisson_pmf(k, shared) for k in range(MAX_GOALS + 1)]
     scores: list[dict[str, float | int]] = []
     for home_goals in range(MAX_GOALS + 1):
         for away_goals in range(MAX_GOALS + 1):
             probability = 0.0
             for common in range(min(home_goals, away_goals) + 1):
                 probability += (
-                    _poisson_pmf(home_goals - common, home_independent)
-                    * _poisson_pmf(away_goals - common, away_independent)
-                    * _poisson_pmf(common, shared)
+                    home_pmfs[home_goals - common]
+                    * away_pmfs[away_goals - common]
+                    * shared_pmfs[common]
                 )
             if home_goals == 0 and away_goals == 0:
                 probability *= 1 - RHO * home_rate * away_rate

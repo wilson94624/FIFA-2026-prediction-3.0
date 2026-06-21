@@ -956,6 +956,7 @@ def run_simulation_pipeline(progress: Callable[[int, str, str], None]) -> dict[s
     with SessionLocal() as session:
         games = raw_matches(session)
     teams = legacy.apply_real_performance_boost(legacy.load_teams(), games)
+    real_games_lookup = legacy.build_real_games_lookup(games)
     counters = {
         team: {
             key: 0 for key in ("R32_pct", "R16_pct", "QF_pct", "SF_pct", "Final_pct", "Winner_pct")
@@ -964,7 +965,7 @@ def run_simulation_pipeline(progress: Callable[[int, str, str], None]) -> dict[s
     }
     runs = 10_000
     for index in range(runs):
-        result = legacy.simulate_tournament_once(teams, games)
+        result = legacy.simulate_tournament_once(teams, games, real_games_lookup)
         for key in ("R32", "R16", "QF", "SF", "Final"):
             for team in result[key]:
                 counters[team][f"{key}_pct"] += 1
