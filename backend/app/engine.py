@@ -196,7 +196,7 @@ def _poisson_pmf(k: int, rate: float) -> float:
     return rate**k * math.exp(-rate) / math.factorial(k)
 
 
-def score_matrix(home_rate: float, away_rate: float) -> list[dict[str, float | int]]:
+def score_probabilities(home_rate: float, away_rate: float) -> list[float]:
     shared = max(0.0, min(GAMMA, home_rate - 0.01, away_rate - 0.01))
     home_independent = home_rate - shared
     away_independent = away_rate - shared
@@ -205,7 +205,7 @@ def score_matrix(home_rate: float, away_rate: float) -> list[dict[str, float | i
     home_pmfs = [_poisson_pmf(k, home_independent) for k in range(MAX_GOALS + 1)]
     away_pmfs = [_poisson_pmf(k, away_independent) for k in range(MAX_GOALS + 1)]
     shared_pmfs = [_poisson_pmf(k, shared) for k in range(MAX_GOALS + 1)]
-    scores: list[dict[str, float | int]] = []
+    probabilities: list[float] = []
     for home_goals in range(MAX_GOALS + 1):
         for away_goals in range(MAX_GOALS + 1):
             probability = 0.0
@@ -223,13 +223,19 @@ def score_matrix(home_rate: float, away_rate: float) -> list[dict[str, float | i
                 probability *= 1 + RHO * away_rate
             elif home_goals == 0 and away_goals == 1:
                 probability *= 1 + RHO * home_rate
-            scores.append(
-                {"home": home_goals, "away": away_goals, "probability": max(0.0, probability)}
-            )
-    total = sum(float(score["probability"]) for score in scores) or 1.0
-    for score in scores:
-        score["probability"] = float(score["probability"]) / total
-    return scores
+            probabilities.append(max(0.0, probability))
+    total = sum(probabilities) or 1.0
+    for index in range(len(probabilities)):
+        probabilities[index] = probabilities[index] / total
+    return probabilities
+
+
+def score_matrix(home_rate: float, away_rate: float) -> list[dict[str, float | int]]:
+    size = MAX_GOALS + 1
+    return [
+        {"home": index // size, "away": index % size, "probability": probability}
+        for index, probability in enumerate(score_probabilities(home_rate, away_rate))
+    ]
 
 
 def mix_matrices(
@@ -329,6 +335,24 @@ def sample_score(matrix: list[dict[str, float | int]], seed: int) -> tuple[int, 
             return int(score["home"]), int(score["away"])
     last = matrix[-1]
     return int(last["home"]), int(last["away"])
+
+
+def sample_mixed_score(
+    normal: list[float], domination: list[float], seed: int
+) -> tuple[int, int]:
+    mixed = [
+        0.7 * normal_probability + 0.3 * domination_probability
+        for normal_probability, domination_probability in zip(normal, domination, strict=True)
+    ]
+    total = sum(mixed) or 1.0
+    draw = random.Random(seed).random()
+    size = MAX_GOALS + 1
+    for index, probability in enumerate(mixed):
+        draw -= probability / total
+        if draw <= 0:
+            return index // size, index % size
+    index = len(mixed) - 1
+    return index // size, index % size
 
 
 def predict_match(

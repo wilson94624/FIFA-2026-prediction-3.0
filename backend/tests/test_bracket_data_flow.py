@@ -154,7 +154,11 @@ def test_simulation_pipeline_uses_latest_database_matches(monkeypatch):
     from backend import player_level_simulator as legacy
 
     seen = {}
-    monkeypatch.setattr(legacy, "load_teams", lambda: {"A": {}, "B": {}})
+    monkeypatch.setattr(
+        legacy,
+        "load_teams",
+        lambda: {"A": {"has_data": False}, "B": {"has_data": False}},
+    )
     monkeypatch.setattr(
         legacy,
         "load_real_games",
@@ -165,9 +169,11 @@ def test_simulation_pipeline_uses_latest_database_matches(monkeypatch):
         seen["boost_games"] = games
         return teams
 
-    def simulate(_teams, games, lookup):
+    def simulate(_teams, games, lookup, shortcuts, active_pqs_cache):
         seen["simulation_games"] = games
         seen["simulation_lookup"] = lookup
+        seen["simulation_shortcuts"] = shortcuts
+        seen["active_pqs_cache"] = active_pqs_cache
         return {
             "R32": ["A", "B"],
             "R16": ["A"],
@@ -186,4 +192,12 @@ def test_simulation_pipeline_uses_latest_database_matches(monkeypatch):
     assert seen["boost_games"] is latest_db_games
     assert seen["simulation_games"] is latest_db_games
     assert seen["simulation_lookup"]["finished"]
+    assert seen["simulation_shortcuts"]
+    assert isinstance(seen["active_pqs_cache"], dict)
     assert snapshot.source == "backend_monte_carlo"
+    assert snapshot.payload["input_hash"] == services.simulation_input_hash_for_data(
+        latest_db_games,
+        {"A": {"has_data": False}, "B": {"has_data": False}},
+        legacy.SIMULATOR_INPUT_VERSION,
+    )
+    assert snapshot.payload["input_hash"] == services.simulation_input_hash(object())

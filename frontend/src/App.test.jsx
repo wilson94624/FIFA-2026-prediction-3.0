@@ -51,6 +51,32 @@ describe('App', () => {
     expect(fetchMock).toHaveBeenCalledWith('/api/sync', expect.objectContaining({ method: 'POST' }));
   });
 
+  it('shows snapshot reuse as a verified cache hit', async () => {
+    const completed = {
+      job_id: 'snapshot-job', job_type: 'simulation', status: 'completed', progress: 100,
+      stage: 'snapshot_reused', message: JSON.stringify({ snapshot_reused: true }), reused: true,
+    };
+    const fetchMock = vi.fn(async (path, options) => {
+      if (path === '/api/simulations' && options?.method === 'POST') {
+        return { ok: true, json: async () => completed };
+      }
+      if (String(path).startsWith('/api/sync-status')) {
+        return { ok: true, json: async () => completed };
+      }
+      return { ok: true, json: async () => responses[path] };
+    });
+    vi.stubGlobal('fetch', fetchMock);
+    render(<App />);
+    await screen.findByText('勝平負機率');
+    fireEvent.click(screen.getByText('資料狀態').closest('summary'));
+    fireEvent.click(screen.getByRole('button', { name: '重新模擬奪冠機率' }));
+
+    expect(await screen.findByText('預測快照已驗證')).toBeInTheDocument();
+    expect(screen.getByText('目前資料未變更，沿用最新模擬結果')).toBeInTheDocument();
+    expect(screen.getByText('✓ 快取命中')).toBeInTheDocument();
+    expect(screen.queryByText(/已執行 0 次/)).not.toBeInTheDocument();
+  });
+
   it('opens a finished match detail and loads its review', async () => {
     const finishedMatch = {
       id: '1', home_team_name_en: 'Switzerland', away_team_name_en: 'Bosnia and Herzegovina',

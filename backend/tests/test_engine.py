@@ -8,8 +8,10 @@ from backend.app.engine import (
     mix_matrices,
     outcome_probabilities,
     predict_match,
+    sample_mixed_score,
     sample_score,
     score_matrix,
+    score_probabilities,
     upset_risk,
 )
 
@@ -23,6 +25,20 @@ def test_score_matrix_and_domination_mix_are_normalized():
     assert len(mixed) == 36
     assert sum(item["probability"] for item in mixed) == pytest.approx(1.0)
     assert outcome_probabilities(mixed).values()
+
+
+def test_compact_score_sampling_matches_full_matrix_path():
+    normal = score_matrix(1.4, 1.0)
+    domination = score_matrix(2.1, 0.7)
+    normal_probabilities = score_probabilities(1.4, 1.0)
+    domination_probabilities = score_probabilities(2.1, 0.7)
+
+    assert normal_probabilities == [float(score["probability"]) for score in normal]
+    assert domination_probabilities == [float(score["probability"]) for score in domination]
+    for seed in (0, 12, 77, 2026):
+        assert sample_mixed_score(normal_probabilities, domination_probabilities, seed) == sample_score(
+            mix_matrices(normal, domination), seed
+        )
 
 
 @pytest.mark.parametrize(

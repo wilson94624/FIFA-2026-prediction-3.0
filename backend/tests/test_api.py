@@ -36,3 +36,26 @@ def test_background_job_returns_immediately_and_reuses_active_job():
         assert second.status_code == 202
         assert first.json()["job_id"] == second.json()["job_id"]
         assert second.json()["reused"] is True
+
+
+def test_simulation_endpoint_returns_completed_snapshot_reuse():
+    completed = {
+        "job_id": "snapshot-job",
+        "job_type": "simulation",
+        "status": "completed",
+        "progress": 100,
+        "stage": "snapshot_reused",
+        "message": "snapshot reused",
+        "error": None,
+        "created_at": None,
+        "updated_at": None,
+    }
+    with TestClient(app) as client, patch(
+        "backend.app.main.create_or_reuse_job", return_value=(completed, True)
+    ):
+        response = client.post("/api/simulations")
+
+    assert response.status_code == 202
+    assert response.headers["X-Job-Reused"] == "true"
+    assert response.json()["reused"] is True
+    assert response.json()["status"] == "completed"

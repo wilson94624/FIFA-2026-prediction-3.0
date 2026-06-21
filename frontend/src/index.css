@@ -278,6 +278,8 @@ textarea:focus-visible {
 .job-banner { background: var(--color-bg-selected); border: 1px solid rgba(26, 158, 92, .48); }
 .job-banner > div:first-child { display: flex; justify-content: space-between; gap: 16px; font-size: 13px; }
 .job-banner span { color: var(--text-secondary); }
+.job-banner-meta { display: flex; align-items: center; justify-content: flex-end; flex-wrap: wrap; gap: 8px; text-align: right; }
+.job-banner .job-cache-hit { padding: 3px 8px; color: var(--color-brand-soft); font-size: 11px; font-weight: 700; white-space: nowrap; background: rgba(26, 158, 92, .12); border-radius: var(--radius-full); }
 .job-banner.failed { border-color: rgba(244, 63, 94, .4); }
 .job-banner p { color: #fda4af; margin-top: 8px; font-size: 13px; }
 .job-progress { height: 4px; margin-top: 10px; border-radius: 4px; overflow: hidden; background: rgba(255,255,255,.06); }

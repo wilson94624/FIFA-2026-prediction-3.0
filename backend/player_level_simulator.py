@@ -10,10 +10,10 @@ try:
         assign_best_thirds,
         resolve_match_teams,
     )
-    from backend.app.engine import mix_matrices, sample_score, score_matrix
+    from backend.app.engine import sample_mixed_score, score_probabilities
 except ModuleNotFoundError:  # Direct `python backend/player_level_simulator.py` compatibility.
     from app.bracket import assign_best_thirds, resolve_match_teams
-    from app.engine import mix_matrices, sample_score, score_matrix
+    from app.engine import sample_mixed_score, score_probabilities
 
 # 設定路徑
 BACKEND_DIR = os.path.dirname(os.path.abspath(__file__))
@@ -35,6 +35,8 @@ DATA_PATH = os.path.join(BASE_DIR, "frontend/src/teams_db.json")
 REAL_GAMES_PATH = os.path.join(BASE_DIR, "frontend/src/real_games_results.json")
 PROBABILITY_JSON_PATH = os.path.join(BASE_DIR, "frontend/src/simulation_probabilities.json")
 ANALYSIS_JSON_PATH = os.path.join(BASE_DIR, "frontend/src/match_analyses.json")
+SIMULATOR_INPUT_VERSION = "championship-simulator-v2-finished-shortcut"
+_AUTO_FINISHED_SHORTCUTS = object()
 
 LLM_ANALYSES = {}
 if os.path.exists(ANALYSIS_JSON_PATH):
@@ -131,6 +133,55 @@ def _finished_real_game(real_games_lookup, stage_type, team_a, team_b):
 
 def _matchup_real_game(real_games_lookup, team_a, team_b):
     return real_games_lookup["matchups"].get((team_a, team_b))
+
+
+def _prepare_finished_match_shortcut(real_game, team_a, team_b, teams):
+    is_home_a = real_game.get("home_team_name_en") == team_a
+    goals_a = (
+        int(real_game.get("home_score") or 0)
+        if is_home_a
+        else int(real_game.get("away_score") or 0)
+    )
+    goals_b = (
+        int(real_game.get("away_score") or 0)
+        if is_home_a
+        else int(real_game.get("home_score") or 0)
+    )
+    score_winner = team_a if goals_a > goals_b else team_b if goals_b > goals_a else "DRAW"
+    team_a_data = teams[team_a]
+    team_b_data = teams[team_b]
+    bench_a = team_a_data["bench_pqs"] if team_a_data["has_data"] else 0.2
+    bench_b = team_b_data["bench_pqs"] if team_b_data["has_data"] else 0.2
+    return score_winner, goals_a, goals_b, 0.04 * (1.0 - bench_a), 0.04 * (1.0 - bench_b)
+
+
+def build_finished_match_shortcuts(real_games_lookup, teams):
+    """Pre-resolve finished scores and fatigue deltas for direct tournament-loop use."""
+    shortcuts = {}
+    for key, real_game in real_games_lookup["finished"].items():
+        _, team_a, team_b = key
+        if team_a not in teams or team_b not in teams:
+            continue
+        shortcuts[key] = _prepare_finished_match_shortcut(real_game, team_a, team_b, teams)
+    return shortcuts
+
+
+def _apply_prepared_finished_match(shortcut, team_a, team_b, fatigue, is_knockout):
+    score_winner, goals_a, goals_b, fatigue_a_delta, fatigue_b_delta = shortcut
+    fatigue[team_a] = fatigue.get(team_a, 0.0) + fatigue_a_delta
+    fatigue[team_b] = fatigue.get(team_b, 0.0) + fatigue_b_delta
+    winner = team_a if score_winner == "DRAW" and is_knockout else score_winner
+    return winner, goals_a, goals_b
+
+
+def apply_finished_match_shortcut(
+    finished_match_shortcuts, stage_type, team_a, team_b, fatigue, is_knockout=False
+):
+    shortcut = finished_match_shortcuts.get((stage_type, team_a, team_b))
+    if shortcut is None:
+        return None
+    return _apply_prepared_finished_match(shortcut, team_a, team_b, fatigue, is_knockout)
+
 
 def load_real_games():
     try:
@@ -272,37 +323,20 @@ def apply_real_performance_boost(teams, real_games):
 
     return updated_teams
 
-def play_match(team_a, team_b, teams, fatigue, real_games, stage_type="group", is_knockout=False, simulated_standings=None, simulated_played_counts=None, real_games_lookup=None, active_pqs_cache=None):
+def play_match(team_a, team_b, teams, fatigue, real_games, stage_type="group", is_knockout=False, simulated_standings=None, simulated_played_counts=None, real_games_lookup=None, active_pqs_cache=None, finished_match_checked=False):
     tA = teams[team_a]
     tB = teams[team_b]
     if real_games_lookup is None:
         real_games_lookup = build_real_games_lookup(real_games)
     
     # 1. 優先檢查真實賽果
-    real_game = _finished_real_game(real_games_lookup, stage_type, team_a, team_b)
+    real_game = None
+    if not finished_match_checked:
+        real_game = _finished_real_game(real_games_lookup, stage_type, team_a, team_b)
 
     if real_game:
-        is_home_a = real_game.get("home_team_name_en") == team_a
-        goalsA = int(real_game.get("home_score") or 0) if is_home_a else int(real_game.get("away_score") or 0)
-        goalsB = int(real_game.get("away_score") or 0) if is_home_a else int(real_game.get("home_score") or 0)
-        
-        # 判定勝負
-        if goalsA > goalsB:
-            winner = team_a
-        elif goalsB > goalsA:
-            winner = team_b
-        else:
-            winner = team_a if is_knockout else 'DRAW'
-            
-        # 疲勞增加
-        fA = fatigue.get(team_a, 0.0)
-        fB = fatigue.get(team_b, 0.0)
-        benchA = tA['bench_pqs'] if tA['has_data'] else 0.2
-        benchB = tB['bench_pqs'] if tB['has_data'] else 0.2
-        fatigue[team_a] = fA + 0.04 * (1.0 - benchA)
-        fatigue[team_b] = fB + 0.04 * (1.0 - benchB)
-        
-        return winner, goalsA, goalsB
+        shortcut = _prepare_finished_match_shortcut(real_game, team_a, team_b, teams)
+        return _apply_prepared_finished_match(shortcut, team_a, team_b, fatigue, is_knockout)
 
     # 2. 處理無大名單國家的輪空邏輯
     if not tA['has_data'] or not tB['has_data']:
@@ -445,13 +479,14 @@ def play_match(team_a, team_b, teams, fatigue, real_games, stage_type="group", i
         domination_lambda = max(0.15, domination_lambda - (-elo_diff - 250) * 0.0005)
 
     # Predictor 4.0: 在完整比分分布層級混合 70% Normal + 30% Domination。
-    normal_matrix = score_matrix(normal_lambda, normal_mu)
+    normal_matrix = score_probabilities(normal_lambda, normal_mu)
     if normal_lambda == domination_lambda and normal_mu == domination_mu:
         domination_matrix = normal_matrix
     else:
-        domination_matrix = score_matrix(domination_lambda, domination_mu)
-    mixed_matrix = mix_matrices(normal_matrix, domination_matrix)
-    goalsA, goalsB = sample_score(mixed_matrix, int(np.random.randint(0, 2**31 - 1)))
+        domination_matrix = score_probabilities(domination_lambda, domination_mu)
+    goalsA, goalsB = sample_mixed_score(
+        normal_matrix, domination_matrix, int(np.random.randint(0, 2**31 - 1))
+    )
     lambda_val = 0.7 * normal_lambda + 0.3 * domination_lambda
     mu_val = 0.7 * normal_mu + 0.3 * domination_mu
             
@@ -503,7 +538,32 @@ def play_match(team_a, team_b, teams, fatigue, real_games, stage_type="group", i
 
     return winner, goalsA, goalsB
 
-def simulate_group_stage(teams, fatigue, real_games, real_games_lookup=None, active_pqs_cache=None):
+def _record_group_match_result(
+    standings, played_counts, team_a, team_b, winner, goals_a, goals_b
+):
+    played_counts[team_a] += 1
+    played_counts[team_b] += 1
+    standings[team_a]['gs'] += goals_a
+    standings[team_a]['gd'] += goals_a - goals_b
+    standings[team_b]['gs'] += goals_b
+    standings[team_b]['gd'] += goals_b - goals_a
+    if winner == team_a:
+        standings[team_a]['points'] += 3
+    elif winner == team_b:
+        standings[team_b]['points'] += 3
+    else:
+        standings[team_a]['points'] += 1
+        standings[team_b]['points'] += 1
+
+
+def simulate_group_stage(
+    teams,
+    fatigue,
+    real_games,
+    real_games_lookup=None,
+    active_pqs_cache=None,
+    finished_match_shortcuts=None,
+):
     standings = {}
     played_counts = {}
     for team in teams.keys():
@@ -526,30 +586,29 @@ def simulate_group_stage(teams, fatigue, real_games, real_games_lookup=None, act
                 team_a = grp_teams[i]
                 team_b = grp_teams[j]
                 
-                winner, gA, gB = play_match(
-                    team_a, team_b, teams, fatigue, real_games, 
-                    stage_type="group", is_knockout=False,
-                    simulated_standings=standings,
-                    simulated_played_counts=played_counts,
-                    real_games_lookup=real_games_lookup,
-                    active_pqs_cache=active_pqs_cache,
+                shortcut = (
+                    finished_match_shortcuts.get(("group", team_a, team_b))
+                    if finished_match_shortcuts is not None
+                    else None
                 )
-                
-                played_counts[team_a] += 1
-                played_counts[team_b] += 1
-                
-                standings[team_a]['gs'] += gA
-                standings[team_a]['gd'] += (gA - gB)
-                standings[team_b]['gs'] += gB
-                standings[team_b]['gd'] += (gB - gA)
-                
-                if winner == team_a:
-                    standings[team_a]['points'] += 3
-                elif winner == team_b:
-                    standings[team_b]['points'] += 3
+                if shortcut is not None:
+                    result = _apply_prepared_finished_match(
+                        shortcut, team_a, team_b, fatigue, False
+                    )
                 else:
-                    standings[team_a]['points'] += 1
-                    standings[team_b]['points'] += 1
+                    result = play_match(
+                        team_a, team_b, teams, fatigue, real_games,
+                        stage_type="group", is_knockout=False,
+                        simulated_standings=standings,
+                        simulated_played_counts=played_counts,
+                        real_games_lookup=real_games_lookup,
+                        active_pqs_cache=active_pqs_cache,
+                        finished_match_checked=finished_match_shortcuts is not None,
+                    )
+                winner, gA, gB = result
+                _record_group_match_result(
+                    standings, played_counts, team_a, team_b, winner, gA, gB
+                )
                     
     group_results = {}
     for grp in groups:
@@ -578,15 +637,29 @@ def simulate_group_stage(teams, fatigue, real_games, real_games_lookup=None, act
     qualified_thirds_teams = [x['team'] for x in sorted_thirds[:8]]
     return group_results, qualified_thirds_teams
 
-def simulate_tournament_once(teams, real_games, real_games_lookup=None):
+def simulate_tournament_once(
+    teams,
+    real_games,
+    real_games_lookup=None,
+    finished_match_shortcuts=_AUTO_FINISHED_SHORTCUTS,
+    active_pqs_cache=None,
+):
     fatigue = {t: 0.0 for t in teams.keys()}
     if real_games_lookup is None:
         real_games_lookup = build_real_games_lookup(real_games)
-    active_pqs_cache = {}
+    if finished_match_shortcuts is _AUTO_FINISHED_SHORTCUTS:
+        finished_match_shortcuts = build_finished_match_shortcuts(real_games_lookup, teams)
+    if active_pqs_cache is None:
+        active_pqs_cache = {}
     
     # 1. 小組賽
     group_results, qualified_thirds = simulate_group_stage(
-        teams, fatigue, real_games, real_games_lookup, active_pqs_cache
+        teams,
+        fatigue,
+        real_games,
+        real_games_lookup,
+        active_pqs_cache,
+        finished_match_shortcuts,
     )
     
     # 2. Resolve every round from the API/DB slot labels and source match IDs.
@@ -608,10 +681,23 @@ def simulate_tournament_once(teams, real_games, real_games_lookup=None):
         if team_a not in teams or team_b not in teams:
             raise ValueError(f"Cannot resolve knockout match {match.get('id')}: {team_a} vs {team_b}")
         participants[stage].extend([team_a, team_b])
-        winner, _, _ = play_match(
-            team_a, team_b, teams, fatigue, real_games, stage_type=stage, is_knockout=True,
-            real_games_lookup=real_games_lookup, active_pqs_cache=active_pqs_cache
+        shortcut = (
+            finished_match_shortcuts.get((stage, team_a, team_b))
+            if finished_match_shortcuts is not None
+            else None
         )
+        if shortcut is not None:
+            result = _apply_prepared_finished_match(
+                shortcut, team_a, team_b, fatigue, True
+            )
+        else:
+            result = play_match(
+                team_a, team_b, teams, fatigue, real_games, stage_type=stage,
+                is_knockout=True, real_games_lookup=real_games_lookup,
+                active_pqs_cache=active_pqs_cache,
+                finished_match_checked=finished_match_shortcuts is not None
+            )
+        winner, _, _ = result
         winners[str(match.get("id"))] = winner
 
     final_matches = [g for g in knockout_matches if g.get("type") == "final"]
@@ -635,6 +721,8 @@ def run_monte_carlo(n_simulations=10000):
     
     # 1. 模擬前，先依據真實世界賽果，動態疊加更新球員與球隊戰力！
     boosted_teams = apply_real_performance_boost(teams, real_games)
+    finished_match_shortcuts = build_finished_match_shortcuts(real_games_lookup, boosted_teams)
+    active_pqs_cache = {}
     
     stats = {}
     for team in boosted_teams.keys():
@@ -651,7 +739,13 @@ def run_monte_carlo(n_simulations=10000):
     start_time = time.time()
     
     for _ in range(n_simulations):
-        run = simulate_tournament_once(boosted_teams, real_games, real_games_lookup)
+        run = simulate_tournament_once(
+            boosted_teams,
+            real_games,
+            real_games_lookup,
+            finished_match_shortcuts,
+            active_pqs_cache,
+        )
         
         for team in run['R32']:
             stats[team]['R32_pct'] += 1

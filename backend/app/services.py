@@ -36,6 +36,7 @@ MATCHES_PATH = FRONTEND_DATA_DIR / "real_games_results.json"
 ANALYSES_PATH = FRONTEND_DATA_DIR / "match_analyses.json"
 CHAMPIONSHIP_PATH = FRONTEND_DATA_DIR / "simulation_probabilities.json"
 ARCHIVE_DIR = FRONTEND_DATA_DIR.parents[1] / "backend" / "archive"
+CHAMPIONSHIP_SIMULATION_RUNS = 10_000
 _cache = {"hits": 0, "misses": 0}
 logger = logging.getLogger(__name__)
 TOURNAMENT_TIMEZONE = timezone(timedelta(hours=-4))
@@ -45,6 +46,26 @@ RETRYABLE_ERRORS = (
     httpx.ReadError,
     httpx.ConnectError,
     httpx.TimeoutException,
+)
+SIMULATION_MATCH_FIELDS = (
+    "id",
+    "match_id",
+    "type",
+    "stage",
+    "group",
+    "local_date",
+    "kickoff",
+    "kickoff_time",
+    "date",
+    "home_team_name_en",
+    "away_team_name_en",
+    "home_team_label",
+    "away_team_label",
+    "finished",
+    "home_score",
+    "away_score",
+    "home_scorers",
+    "away_scorers",
 )
 
 
@@ -159,6 +180,67 @@ def raw_matches(session: Session) -> list[dict[str, Any]]:
         [dict(record.payload) for record in records],
         key=lambda match: parse_match_date(match.get("local_date")),
     )
+
+
+def _simulation_match_input(match: dict[str, Any]) -> dict[str, Any]:
+    canonical = {key: match.get(key) for key in SIMULATION_MATCH_FIELDS if key in match}
+    canonical["match_id"] = str(match.get("match_id") or match.get("id") or "")
+    for key, value in match.items():
+        normalized_key = key.casefold()
+        compact_key = normalized_key.replace("_", "").replace("-", "")
+        if (
+            "penalt" in compact_key
+            or "extratime" in compact_key
+            or normalized_key.startswith("winner")
+        ):
+            canonical[key] = value
+    stats = match.get("stats")
+    if isinstance(stats, dict) and "unavailable_players" in stats:
+        canonical["unavailable_players"] = stats["unavailable_players"]
+    return canonical
+
+
+def simulation_input_hash_for_data(
+    games: list[dict[str, Any]],
+    teams: dict[str, dict[str, Any]],
+    simulator_version: str | None = None,
+) -> str:
+    if simulator_version is None:
+        from backend.player_level_simulator import SIMULATOR_INPUT_VERSION
+
+        simulator_version = SIMULATOR_INPUT_VERSION
+    canonical = {
+        "model_version": settings.model_version,
+        "simulation_runs": CHAMPIONSHIP_SIMULATION_RUNS,
+        "simulator_version": simulator_version,
+        "matches": [_simulation_match_input(game) for game in games],
+        "teams": teams,
+    }
+    encoded = json.dumps(
+        canonical,
+        ensure_ascii=False,
+        sort_keys=True,
+        separators=(",", ":"),
+        default=str,
+    ).encode("utf-8")
+    return hashlib.sha256(encoded).hexdigest()
+
+
+def get_simulation_hash_inputs(
+    session: Session,
+) -> tuple[list[dict[str, Any]], dict[str, dict[str, Any]], str]:
+    from backend import player_level_simulator as legacy
+
+    games = raw_matches(session)
+    teams = legacy.load_teams()
+    input_hash = simulation_input_hash_for_data(
+        games, teams, legacy.SIMULATOR_INPUT_VERSION
+    )
+    return games, teams, input_hash
+
+
+def simulation_input_hash(session: Session) -> str:
+    return get_simulation_hash_inputs(session)[2]
 
 
 def _market_for_match(session: Session, match: dict[str, Any]) -> dict[str, Any] | None:
@@ -954,18 +1036,22 @@ def run_simulation_pipeline(progress: Callable[[int, str, str], None]) -> dict[s
     progress(5, "simulation", "準備 10,000 次蒙地卡羅模擬")
     # The database is the sole match source for both /api/tournament and simulations.
     with SessionLocal() as session:
-        games = raw_matches(session)
-    teams = legacy.apply_real_performance_boost(legacy.load_teams(), games)
+        games, base_teams, input_hash = get_simulation_hash_inputs(session)
+    teams = legacy.apply_real_performance_boost(base_teams, games)
     real_games_lookup = legacy.build_real_games_lookup(games)
+    finished_match_shortcuts = legacy.build_finished_match_shortcuts(real_games_lookup, teams)
+    active_pqs_cache = {}
     counters = {
         team: {
             key: 0 for key in ("R32_pct", "R16_pct", "QF_pct", "SF_pct", "Final_pct", "Winner_pct")
         }
         for team in teams
     }
-    runs = 10_000
+    runs = CHAMPIONSHIP_SIMULATION_RUNS
     for index in range(runs):
-        result = legacy.simulate_tournament_once(teams, games, real_games_lookup)
+        result = legacy.simulate_tournament_once(
+            teams, games, real_games_lookup, finished_match_shortcuts, active_pqs_cache
+        )
         for key in ("R32", "R16", "QF", "SF", "Final"):
             for team in result[key]:
                 counters[team][f"{key}_pct"] += 1
@@ -983,6 +1069,7 @@ def run_simulation_pipeline(progress: Callable[[int, str, str], None]) -> dict[s
     probabilities.sort(key=lambda item: item["Winner_pct"], reverse=True)
     payload = {
         "last_updated": now().isoformat(),
+        "input_hash": input_hash,
         "probabilities": probabilities,
     }
     with SessionLocal() as session:
