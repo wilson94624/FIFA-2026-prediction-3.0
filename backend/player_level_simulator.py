@@ -60,10 +60,15 @@ def load_teams():
             t['def_pqs'] = t.get('starting_pqs', 0.5)
     return teams
 
-def get_active_pqs(team_data, unavailable_names, fatigue_val=0.0):
+def get_active_pqs(team_data, unavailable_names, fatigue_val=0.0, cache=None):
     if not team_data.get('has_data'):
         pqs = team_data.get('starting_pqs', 0.5)
         return pqs * (1.0 - fatigue_val), pqs * (1.0 - fatigue_val), team_data.get('bench_pqs', 0.2)
+
+    cache_key = (id(team_data), tuple(unavailable_names))
+    if cache is not None and cache_key in cache:
+        att_pqs, def_pqs, bench_pqs = cache[cache_key]
+        return att_pqs * (1.0 - fatigue_val), def_pqs * (1.0 - fatigue_val), bench_pqs
         
     players = team_data['players']
     active_players = []
@@ -94,11 +99,38 @@ def get_active_pqs(team_data, unavailable_names, fatigue_val=0.0):
     att_pqs = sum(p['efficiency_score'] for p in fw_mf) / len(fw_mf) if fw_mf else team_data.get('starting_pqs', 0.5)
     def_pqs = sum(p['efficiency_score'] for p in df_gk) / len(df_gk) if df_gk else team_data.get('starting_pqs', 0.5)
     bench_pqs = sum(p['efficiency_score'] for p in bench) / len(bench) if bench else 0.01
+
+    if cache is not None:
+        cache[cache_key] = (att_pqs, def_pqs, bench_pqs)
     
     att_pqs_active = att_pqs * (1.0 - fatigue_val)
     def_pqs_active = def_pqs * (1.0 - fatigue_val)
     
     return att_pqs_active, def_pqs_active, bench_pqs
+
+
+def build_real_games_lookup(real_games):
+    """Index first-match lookups while preserving legacy list-order semantics."""
+    finished = {}
+    matchups = {}
+    for game in real_games or []:
+        home = game.get("home_team_name_en")
+        away = game.get("away_team_name_en")
+        # Store both orientations. setdefault preserves the first game that the
+        # previous linear scan would have selected for either team order.
+        for team_a, team_b in ((home, away), (away, home)):
+            matchups.setdefault((team_a, team_b), game)
+            if game.get("finished") == "TRUE":
+                finished.setdefault((game.get("type"), team_a, team_b), game)
+    return {"finished": finished, "matchups": matchups}
+
+
+def _finished_real_game(real_games_lookup, stage_type, team_a, team_b):
+    return real_games_lookup["finished"].get((stage_type, team_a, team_b))
+
+
+def _matchup_real_game(real_games_lookup, team_a, team_b):
+    return real_games_lookup["matchups"].get((team_a, team_b))
 
 def load_real_games():
     try:
@@ -240,20 +272,14 @@ def apply_real_performance_boost(teams, real_games):
 
     return updated_teams
 
-def play_match(team_a, team_b, teams, fatigue, real_games, stage_type="group", is_knockout=False, simulated_standings=None, simulated_played_counts=None):
+def play_match(team_a, team_b, teams, fatigue, real_games, stage_type="group", is_knockout=False, simulated_standings=None, simulated_played_counts=None, real_games_lookup=None, active_pqs_cache=None):
     tA = teams[team_a]
     tB = teams[team_b]
+    if real_games_lookup is None:
+        real_games_lookup = build_real_games_lookup(real_games)
     
     # 1. 優先檢查真實賽果
-    real_game = None
-    if real_games:
-        for g in real_games:
-            if (g.get("finished") == "TRUE" and 
-                g.get("type") == stage_type and 
-                ((g.get("home_team_name_en") == team_a and g.get("away_team_name_en") == team_b) or
-                 (g.get("home_team_name_en") == team_b and g.get("away_team_name_en") == team_a))):
-                real_game = g
-                break
+    real_game = _finished_real_game(real_games_lookup, stage_type, team_a, team_b)
 
     if real_game:
         is_home_a = real_game.get("home_team_name_en") == team_a
@@ -290,21 +316,18 @@ def play_match(team_a, team_b, teams, fatigue, real_games, stage_type="group", i
     # 3. 雙泊松隨機預測
     unavailable_a = []
     unavailable_b = []
-    if real_games:
-        for g in real_games:
-            if (((g.get("home_team_name_en") == team_a and g.get("away_team_name_en") == team_b) or
-                 (g.get("home_team_name_en") == team_b and g.get("away_team_name_en") == team_a))):
-                stats = g.get("stats", {})
-                if stats and "unavailable_players" in stats:
-                    un_players = stats["unavailable_players"]
-                    is_home_a = g.get("home_team_name_en") == team_a
-                    if is_home_a:
-                        unavailable_a = [p["name"] for p in un_players.get("home", [])]
-                        unavailable_b = [p["name"] for p in un_players.get("away", [])]
-                    else:
-                        unavailable_a = [p["name"] for p in un_players.get("away", [])]
-                        unavailable_b = [p["name"] for p in un_players.get("home", [])]
-                break
+    matchup_game = _matchup_real_game(real_games_lookup, team_a, team_b)
+    if matchup_game:
+        stats = matchup_game.get("stats", {})
+        if stats and "unavailable_players" in stats:
+            un_players = stats["unavailable_players"]
+            is_home_a = matchup_game.get("home_team_name_en") == team_a
+            if is_home_a:
+                unavailable_a = [p["name"] for p in un_players.get("home", [])]
+                unavailable_b = [p["name"] for p in un_players.get("away", [])]
+            else:
+                unavailable_a = [p["name"] for p in un_players.get("away", [])]
+                unavailable_b = [p["name"] for p in un_players.get("home", [])]
 
     fA = fatigue.get(team_a, 0.0)
     fB = fatigue.get(team_b, 0.0)
@@ -313,8 +336,12 @@ def play_match(team_a, team_b, teams, fatigue, real_games, stage_type="group", i
     eloB = tB['fifa_points'] * (1.0 - fB * 0.05)
     
     # 拆分攻防與替補 PQS (受傷與板凳遞補計算)
-    att_pqsA, def_pqsA, bench_pqsA = get_active_pqs(tA, unavailable_a, fA)
-    att_pqsB, def_pqsB, bench_pqsB = get_active_pqs(tB, unavailable_b, fB)
+    att_pqsA, def_pqsA, bench_pqsA = get_active_pqs(
+        tA, unavailable_a, fA, active_pqs_cache
+    )
+    att_pqsB, def_pqsB, bench_pqsB = get_active_pqs(
+        tB, unavailable_b, fB, active_pqs_cache
+    )
 
     # A. 動態小組賽第三輪戰意懲罰機制 (Motivation Penalty)
     pts_a, pts_b = 0, 0
@@ -418,10 +445,12 @@ def play_match(team_a, team_b, teams, fatigue, real_games, stage_type="group", i
         domination_lambda = max(0.15, domination_lambda - (-elo_diff - 250) * 0.0005)
 
     # Predictor 4.0: 在完整比分分布層級混合 70% Normal + 30% Domination。
-    mixed_matrix = mix_matrices(
-        score_matrix(normal_lambda, normal_mu),
-        score_matrix(domination_lambda, domination_mu),
-    )
+    normal_matrix = score_matrix(normal_lambda, normal_mu)
+    if normal_lambda == domination_lambda and normal_mu == domination_mu:
+        domination_matrix = normal_matrix
+    else:
+        domination_matrix = score_matrix(domination_lambda, domination_mu)
+    mixed_matrix = mix_matrices(normal_matrix, domination_matrix)
     goalsA, goalsB = sample_score(mixed_matrix, int(np.random.randint(0, 2**31 - 1)))
     lambda_val = 0.7 * normal_lambda + 0.3 * domination_lambda
     mu_val = 0.7 * normal_mu + 0.3 * domination_mu
@@ -474,7 +503,7 @@ def play_match(team_a, team_b, teams, fatigue, real_games, stage_type="group", i
 
     return winner, goalsA, goalsB
 
-def simulate_group_stage(teams, fatigue, real_games):
+def simulate_group_stage(teams, fatigue, real_games, real_games_lookup=None, active_pqs_cache=None):
     standings = {}
     played_counts = {}
     for team in teams.keys():
@@ -501,7 +530,9 @@ def simulate_group_stage(teams, fatigue, real_games):
                     team_a, team_b, teams, fatigue, real_games, 
                     stage_type="group", is_knockout=False,
                     simulated_standings=standings,
-                    simulated_played_counts=played_counts
+                    simulated_played_counts=played_counts,
+                    real_games_lookup=real_games_lookup,
+                    active_pqs_cache=active_pqs_cache,
                 )
                 
                 played_counts[team_a] += 1
@@ -547,11 +578,16 @@ def simulate_group_stage(teams, fatigue, real_games):
     qualified_thirds_teams = [x['team'] for x in sorted_thirds[:8]]
     return group_results, qualified_thirds_teams
 
-def simulate_tournament_once(teams, real_games):
+def simulate_tournament_once(teams, real_games, real_games_lookup=None):
     fatigue = {t: 0.0 for t in teams.keys()}
+    if real_games_lookup is None:
+        real_games_lookup = build_real_games_lookup(real_games)
+    active_pqs_cache = {}
     
     # 1. 小組賽
-    group_results, qualified_thirds = simulate_group_stage(teams, fatigue, real_games)
+    group_results, qualified_thirds = simulate_group_stage(
+        teams, fatigue, real_games, real_games_lookup, active_pqs_cache
+    )
     
     # 2. Resolve every round from the API/DB slot labels and source match IDs.
     knockout_matches = sorted(
@@ -573,7 +609,8 @@ def simulate_tournament_once(teams, real_games):
             raise ValueError(f"Cannot resolve knockout match {match.get('id')}: {team_a} vs {team_b}")
         participants[stage].extend([team_a, team_b])
         winner, _, _ = play_match(
-            team_a, team_b, teams, fatigue, real_games, stage_type=stage, is_knockout=True
+            team_a, team_b, teams, fatigue, real_games, stage_type=stage, is_knockout=True,
+            real_games_lookup=real_games_lookup, active_pqs_cache=active_pqs_cache
         )
         winners[str(match.get("id"))] = winner
 
@@ -594,6 +631,7 @@ def simulate_tournament_once(teams, real_games):
 def run_monte_carlo(n_simulations=10000):
     teams = load_teams()
     real_games = load_real_games()
+    real_games_lookup = build_real_games_lookup(real_games)
     
     # 1. 模擬前，先依據真實世界賽果，動態疊加更新球員與球隊戰力！
     boosted_teams = apply_real_performance_boost(teams, real_games)
@@ -613,7 +651,7 @@ def run_monte_carlo(n_simulations=10000):
     start_time = time.time()
     
     for _ in range(n_simulations):
-        run = simulate_tournament_once(boosted_teams, real_games)
+        run = simulate_tournament_once(boosted_teams, real_games, real_games_lookup)
         
         for team in run['R32']:
             stats[team]['R32_pct'] += 1
