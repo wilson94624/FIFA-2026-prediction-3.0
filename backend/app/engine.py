@@ -403,6 +403,9 @@ def predict_match(
         "home": home,
         "away": away,
         "local_date": match.get("local_date"),
+        "kickoff_utc": match.get("kickoff_utc"),
+        "kickoff_status": match.get("kickoff_status"),
+        "kickoff_source": match.get("kickoff_source"),
         "stage": match.get("type", "group"),
         "group": match.get("group"),
         "model": {

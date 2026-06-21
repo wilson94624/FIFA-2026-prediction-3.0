@@ -70,6 +70,20 @@ def test_prediction_is_reproducible_and_keeps_full_score_outputs():
     first = predict_match(match, teams, games, seed=77)
     second = predict_match(match, teams, games, seed=77)
     assert first == second
+    timed_prediction = predict_match(
+        {
+            **match,
+            "kickoff_utc": "2026-06-21T19:00:00Z",
+            "kickoff_status": "confirmed",
+            "kickoff_source": "fotmob",
+        },
+        teams,
+        games,
+        seed=77,
+    )
+    assert timed_prediction["kickoff_utc"] == "2026-06-21T19:00:00Z"
+    assert timed_prediction["kickoff_status"] == "confirmed"
+    assert timed_prediction["kickoff_source"] == "fotmob"
     market_prediction = predict_match(
         match,
         teams,

@@ -82,6 +82,7 @@ describe('App', () => {
       id: '1', home_team_name_en: 'Switzerland', away_team_name_en: 'Bosnia and Herzegovina',
       home_score: '2', away_score: '1', finished: 'TRUE', time_elapsed: 'finished',
       type: 'group', group: 'B', local_date: '06/12/2026 12:00',
+      kickoff_utc: '2026-06-12T19:00:00Z', kickoff_status: 'confirmed',
       stats: { possessionA: 52, possessionB: 48, shotsA: 10, shotsB: 8, xgA: 1.7, xgB: 0.9, cardsA: 2, cardsB: 1 },
     };
     const fetchMock = vi.fn(async (path) => {
@@ -104,6 +105,7 @@ describe('App', () => {
     await screen.findByText('勝平負機率');
     fireEvent.click(screen.getByRole('button', { name: '賽程' }));
     await screen.findByText('2026 世界盃賽程與賽果');
+    expect(await screen.findByText('03:00')).toBeInTheDocument();
     fireEvent.click(await screen.findByRole('button', { name: '查看比賽詳情：瑞士 對 波赫，比分 2 比 1' }));
     expect(await screen.findByRole('dialog', { name: '比賽詳情' })).toBeInTheDocument();
     expect(await screen.findByLabelText('勝負方向命中')).toBeInTheDocument();

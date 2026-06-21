@@ -1,5 +1,5 @@
 import { useMemo, useRef, useState } from 'react';
-import { formatTaiwanTime, toTaiwanTime } from '../utils/constants';
+import { formatMatchTaiwanTime, formatTaiwanTime, matchDateTimeValue } from '../utils/constants';
 import ChampionshipOdds from './ChampionshipOdds';
 import { TeamLabel } from './Flag';
 import { ScoreMatrixModal } from './Modals';
@@ -304,7 +304,7 @@ export default function NextMatchPredictor({ loading, predictions, championship,
             >
               <span>Match #{item.match_id} · {item.group ? `${item.group}組` : item.stage}</span>
               <strong className="upcoming-match-teams"><TeamLabel name={item.home} /> <i>vs</i> <TeamLabel name={item.away} /></strong>
-              <small>{toTaiwanTime(item.local_date)}</small>
+              <small>{formatMatchTaiwanTime(item)}</small>
             </button>
           ))}
         </div>
@@ -317,7 +317,9 @@ export default function NextMatchPredictor({ loading, predictions, championship,
               <span>{selected.group ? `${selected.group}組小組賽` : selected.stage}</span>
               <span>Match #{selected.match_id}</span>
             </div>
-            <time dateTime={selected.local_date}>臺灣時間 {toTaiwanTime(selected.local_date)}</time>
+            <time dateTime={matchDateTimeValue(selected)}>
+              臺灣時間 {formatMatchTaiwanTime(selected)}
+            </time>
             <button
               className="btn-secondary share-maintenance"
               onClick={handleShare}
@@ -428,7 +430,7 @@ export default function NextMatchPredictor({ loading, predictions, championship,
           <span>爆冷風險：{riskLabel[model.upset_risk.level] || model.upset_risk.level}（{model.upset_risk.value.toFixed(1)}%）</span>
         </div>
         <footer>
-          <span><b>比賽時間</b><strong>{toTaiwanTime(selected.local_date)}</strong></span>
+          <span><b>比賽時間</b><strong>{formatMatchTaiwanTime(selected)}</strong></span>
           <span><b>預測產生</b><strong>{generatedAt}</strong></span>
         </footer>
       </div>

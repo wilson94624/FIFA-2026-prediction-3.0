@@ -32,6 +32,10 @@ const prediction = {
 const teams = {
   Switzerland: { fifa_rank: 19, fifa_points: 1700 },
   'Bosnia and Herzegovina': { fifa_rank: 59, fifa_points: 1450 },
+  Belgium: { fifa_rank: 8, fifa_points: 1770 },
+  Iran: { fifa_rank: 21, fifa_points: 1600 },
+  Spain: { fifa_rank: 2, fifa_points: 1850 },
+  'Saudi Arabia': { fifa_rank: 58, fifa_points: 1450 },
 };
 
 afterEach(cleanup);
@@ -142,5 +146,63 @@ describe('NextMatchPredictor', () => {
     expect(screen.getByRole('dialog', { name: '完整比分機率矩陣' })).toBeInTheDocument();
     fireEvent.click(screen.getByRole('button', { name: '關閉視窗' }));
     expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
+  });
+
+  it('uses kickoff_utc for match cards, selected header and share card time', () => {
+    const belgiumIran = {
+      ...prediction,
+      match_id: '37',
+      home: 'Belgium',
+      away: 'Iran',
+      group: 'G',
+      local_date: '06/21/2026 12:00',
+      kickoff_utc: '2026-06-21T19:00:00Z',
+      kickoff_status: 'confirmed',
+    };
+    const spainSaudi = {
+      ...prediction,
+      match_id: '39',
+      home: 'Spain',
+      away: 'Saudi Arabia',
+      group: 'H',
+      local_date: '06/21/2026 12:00',
+      kickoff_utc: '2026-06-21T16:00:00Z',
+      kickoff_status: 'confirmed',
+    };
+
+    render(
+      <NextMatchPredictor
+        loading={false}
+        predictions={[belgiumIran, spainSaudi]}
+        championship={{ probabilities: [] }}
+        teams={teams}
+        matches={[]}
+      />,
+    );
+
+    expect(screen.getAllByText('2026/06/22 03:00').length).toBeGreaterThan(0);
+    expect(screen.getByText('2026/06/22 00:00')).toBeInTheDocument();
+    expect(screen.getByText(/臺灣時間 2026\/06\/22 03:00/)).toBeInTheDocument();
+    expect(within(screen.getByTestId('share-card')).getByText('2026/06/22 03:00')).toBeInTheDocument();
+
+    fireEvent.click(screen.getByRole('button', { name: /Spain.*Saudi Arabia|西班牙.*沙烏地/ }));
+    expect(screen.getByText(/臺灣時間 2026\/06\/22 00:00/)).toBeInTheDocument();
+  });
+
+  it('shows a pending label when local_date lacks timezone confirmation', () => {
+    render(
+      <NextMatchPredictor
+        loading={false}
+        predictions={[{
+          ...prediction,
+          kickoff_status: 'local_time_timezone_missing',
+        }]}
+        championship={{ probabilities: [] }}
+        teams={teams}
+        matches={[]}
+      />,
+    );
+
+    expect(screen.getAllByText('時間待確認').length).toBeGreaterThan(0);
   });
 });
