@@ -1,286 +1,541 @@
-# 🏆 FIFA 2026 World Cup Player-Level Predictor & Simulator 4.0
+# 🏆 FIFA Predictor 4.0
 
-這是一個結合了 **EA Sports FC 26 (FIFA 26) 全球球員級（Player-Level）數據庫**、**雙泊松期望值比分預測模型**，以及 **React 互動式對陣圖動畫網頁** 的進階預測模擬系統。
+FIFA Predictor 4.0 是一個針對 2026 FIFA 世界盃打造的智慧預測與賽事模擬平台。
 
-本專案擺脫了傳統單純依靠國家隊歷史勝負的 Team-Level 預測，改從每支球隊 26 人大名單的球員評分（PQS）與屬性進行底層建構。
+系統結合 Player Quality Score（PQS）球員評分模型、ELO 強度評估、傷停與疲勞影響分析、雙變量泊松（Bivariate Poisson）比分模型、Dixon-Coles 修正以及 10,000 次 Monte Carlo Simulation，提供單場比賽預測、淘汰賽推演、奪冠機率分析、風險評估與賽後模型驗證。
 
-## Predictor 4.0 架構
+除了預測結果外，系統亦提供模型回測、命中率統計、失準原因解析與模型表現追蹤，讓預測結果具備可解釋性與可驗證性。
 
-4.0 將所有預測運算集中到 Python：React 不再重算 Poisson、ELO、疲勞或 Domination，只顯示 FastAPI 回傳的版本化結果。執行期資料存放於 SQLite；原有 JSON 僅作首次啟動的唯讀種子，不會被 API 覆寫。
+---
 
-- FastAPI：預測、賽程、同步工作、Monte Carlo、回測、模型檢討與效能監控。
-- Predictor Engine：70% Normal + 30% Domination 分布混合、Dixon-Coles、雙變量 Poisson、Confidence 與 Upset Risk。
-- External Evidence：The Odds API 去水市場共識與 70/30 校正參考；模型主值保持不變。
-- React：深色霓虹介面、完整比分矩陣、風險分析、市場證據、工作進度與 calibration。
+## 🌍 線上展示
 
-### 本機啟動
+Demo：
 
-```bash
-python3 -m venv .venv
-.venv/bin/pip install -e '.[dev]'
-cp .env.example .env
-.venv/bin/uvicorn backend.app.main:app --reload
+https://fifa-2026-predictor-4.onrender.com
+
+> 首次開啟可能需要 30~60 秒喚醒 Render Free Instance。
+
+---
+
+## ⭐ 專案亮點
+
+### ⚽ 預測模型
+
+- Player Quality Score（PQS）球員評分模型
+- ELO Rating 球隊強度評估
+- 傷停球員動態影響分析
+- 球員疲勞累積模型
+- 主辦國優勢修正
+- 球風相剋（Matchup Style Effect）
+- Bivariate Poisson 雙變量泊松比分模型
+- Dixon-Coles 低比分修正
+- 完整比分機率矩陣（0–0 ~ 5–5）
+- 勝 / 平 / 負機率預測
+- 預測信心與爆冷風險評估
+
+### 🏆 賽事模擬
+
+- FIFA 2026 全新 48 隊賽制支援
+- 小組賽 + 淘汰賽完整模擬
+- 10,000 次 Monte Carlo Simulation
+- 奪冠機率預測
+- 即時淘汰賽推演
+- 奪冠熱門解讀系統
+
+### 📊 模型分析
+
+- 預測信心等級
+- 爆冷風險分析
+- 賽後模型檢討
+- 預測與實際結果比較
+- 模型失準原因解析
+- 命中率與回測統計
+
+### 🚀 工程實作
+
+- FastAPI 後端架構
+- React + Vite 前端
+- Snapshot Cache 快取機制
+- Background Job System
+- World Cup API 整合
+- FotMob 資料同步
+- Render 雲端部署
+- Simulation 效能優化 67.9%＝約 3.1x 加速
+
+---
+
+## 📸 系統畫面
+
+### 首頁預測
+
+> <img width="1840" height="1124" alt="image" src="https://github.com/user-attachments/assets/837dc0f4-7b96-4611-a564-d82f321d26d5" />
+
+
+### 奪冠模擬
+
+> <img width="1840" height="1124" alt="image" src="https://github.com/user-attachments/assets/6e849a91-60da-4fcc-9a51-4e9e501adb67" />
+
+
+### 奪冠熱門解讀
+
+> <img width="1840" height="1124" alt="截圖 2026-06-22 晚上11 43 22" src="https://github.com/user-attachments/assets/8fda2123-a7e8-4093-acee-7c0ddcfcef5c" />
+
+
+### 賽後模型檢討
+
+> <img width="1840" height="1124" alt="image" src="https://github.com/user-attachments/assets/5be485e7-b68b-401b-b462-a16f21d6fb8a" />
+> <img width="1840" height="1124" alt="image" src="https://github.com/user-attachments/assets/5d75f810-9a9d-4680-b79e-e2f5ed2efe93" />
+
+
+---
+
+## 🧠 單場預測流程
+
+```mermaid
+flowchart TD
+    A["teams_db.json 球隊 / 球員資料"] --> B["active_pqs() 可用球員攻防 PQS"]
+    C["matches 賽程與已完賽結果"] --> D["dynamic_elos_before() 動態 ELO"]
+    C --> E["fatigue_before() 疲勞累積"]
+    F["FotMob 傷停 / unavailable_players"] --> B
+
+    B --> G["expected_goals()"]
+    D --> G
+    E --> G
+
+    G --> H["Normal Scenario"]
+    G --> I["Domination Scenario"]
+
+    H --> J["Bivariate Poisson"]
+    I --> K["Bivariate Poisson"]
+
+    J --> L["Dixon-Coles correction"]
+    K --> M["Dixon-Coles correction"]
+
+    L --> N["0-0 到 5-5 score matrix"]
+    M --> O["0-0 到 5-5 score matrix"]
+
+    N --> P["70% Normal + 30% Domination"]
+    O --> P
+
+    P --> Q["Outcome aggregation"]
+    Q --> R["勝 / 平 / 負機率"]
+    P --> S["預測比分與 top scores"]
+    R --> T["Confidence / Upset Risk"]
 ```
 
-另一個終端啟動前端：
+---
 
-```bash
-cd frontend
-npm install
-npm run dev
+## 🏆 奪冠模擬流程
+
+```mermaid
+flowchart TD
+    A["POST /api/simulations"] --> B["jobs.py 建立或重用 simulation job"]
+    B --> C["檢查 championship snapshot input_hash"]
+    C -->|資料未變更| D["重用 snapshots.championship_odds"]
+    C -->|資料已變更| E["player_level_simulator.py"]
+
+    E --> F["讀取 DB matches"]
+    E --> G["讀取 teams_db.json"]
+    F --> H["套用已完賽結果與真實表現 boost"]
+    G --> H
+
+    H --> I["simulate_tournament_once()"]
+    I --> J["小組賽與淘汰賽模擬"]
+    J --> K["單場抽樣使用 engine.score_probabilities()"]
+    K --> L["重複 10,000 次 Monte Carlo"]
+    L --> M["計算 R32 / R16 / QF / SF / Final / Winner 機率"]
+    M --> N["championship_explanations()"]
+    N --> O["寫入 snapshots.championship_odds"]
+    O --> P["GET /api/championship-odds"]
+    P --> Q["React ChampionshipOdds 顯示"]
 ```
 
-`THE_ODDS_API_KEY` 與 `GEMINI_API_KEY` 都是選填；缺少金鑰時會使用明確的 disabled/fallback 狀態，核心預測仍可完整運作。
+> 註：FIFA 2026 小組第三名分配目前在 `bracket.py` 使用 constraint search 與 provisional fallback；尚未寫成完整官方 lookup table。
 
-### Public API
+---
 
-- `GET /api/predictions`、`GET /api/predictions/{match_id}`
-- `GET /api/tournament`、`GET /api/championship-odds`
-- `POST /api/sync`、`POST /api/simulations`、`GET /api/sync-status`
-- `GET /api/backtests/summary`、`GET /api/reviews/{match_id}`、`GET /api/metrics`
+## 🧠 模型技術細節
 
-### 驗證
+### Expected Goals Estimation
 
-```bash
-.venv/bin/pytest
-.venv/bin/ruff check backend/app backend/tests backend/alembic
-cd frontend && npm run test && npm run lint && npm run build
+系統首先根據球員品質（PQS）、ELO 強度、傷停影響、疲勞狀態、主辦國優勢以及球風相剋等因素估計雙方期望進球（Expected Goals）。
+
+模型同時建立：
+
+- Normal Scenario（正常情境）
+- Domination Scenario（壓制情境）
+
+最終以：
+
+```text
+70% Normal
+30% Domination
+```
+
+進行混合。
+
+---
+
+### Bivariate Poisson Score Model
+
+比分機率矩陣使用 Bivariate Poisson（雙變量泊松）建立。
+
+相較於傳統獨立泊松模型，雙變量泊松允許雙方進球存在共同變動因素，使比賽結果更符合真實足球比賽特性。
+
+目前共同進球參數：
+
+```text
+γ = 0.08
+```
+
+模型產生：
+
+```text
+0-0 ～ 5-5
+共 36 個比分結果
+```
+
+完整比分機率矩陣。
+
+---
+
+### Dixon-Coles Correction
+
+足球比賽中的低比分結果（尤其 0-0、1-0、0-1、1-1）往往無法被標準泊松模型正確描述。
+
+因此模型額外套用 Dixon-Coles Correction：
+
+```text
+ρ = -0.05
+```
+
+針對低比分區域進行機率修正，提高平局與低比分比賽的預測合理性。
+
+---
+
+### Outcome Aggregation
+
+勝、平、負機率並非獨立計算。
+
+系統先建立完整比分矩陣，再透過機率加總得到：
+
+- Home Win
+- Draw
+- Away Win
+
+最終輸出的勝平負機率與預測比分皆來自同一套比分分布模型。
+
+---
+
+## 🏗️ 技術架構
+
+### Frontend
+
+- React
+- Vite
+- JavaScript
+- CSS
+
+### Backend
+
+- FastAPI
+- SQLAlchemy
+- SQLite
+- Python
+
+### Data Sources
+
+- FIFA World Cup API
+- FotMob
+- The Odds API（若設定 `THE_ODDS_API_KEY`）
+- Gemini（若設定 `GEMINI_API_KEY`，用於更新賽前 / 賽後文字分析）
+
+### Local Seed / Fallback Data
+
+- `teams_db.json`：球隊與球員資料來源
+- `real_games_results.json`：首次啟動時匯入 matches 的 seed data
+- `simulation_probabilities.json`：首次啟動時匯入 championship snapshot 的 seed data
+- `match_analyses.json`：Gemini 未設定或無快取分析時的文字 fallback
+
+### Deployment
+
+- Render
+- GitHub
+
+---
+
+## 🏗️ 系統架構
+
+```mermaid
+flowchart LR
+    USER["React Frontend"]
+    API["FastAPI Backend"]
+    MODEL["Prediction Engine"]
+    DB["SQLite Database"]
+
+    USER --> API
+    API --> MODEL
+    MODEL --> DB
+```
+
+FIFA Predictor 採用前後端分離架構。
+
+- React + Vite 負責使用者介面
+- FastAPI 提供 REST API
+- Prediction Engine 負責單場預測與奪冠模擬
+- SQLite 儲存比賽、預測、模擬與回測資料
+
+所有前端畫面皆透過 API 取得資料，不直接讀取資料庫或本地 JSON。
+
+---
+
+## 🧠 Prediction Engine Architecture
+
+```mermaid
+flowchart LR
+    subgraph External["External Services"]
+        WORLD["FIFA World Cup API"]
+        ODDSAPI["The Odds API"]
+        FOTMOBAPI["FotMob"]
+        GEMINI["Gemini API"]
+    end
+
+    subgraph Backend["Prediction Backend"]
+        SERVICES["services.py"]
+        ENGINE["engine.py"]
+        BRACKET["bracket.py"]
+        ANALYTICS["analytics.py"]
+        JOBS["jobs.py"]
+        SIM["player_level_simulator.py"]
+    end
+
+    subgraph Database["SQLite Database"]
+        MATCHES["matches"]
+        PREDS["predictions"]
+        SNAP["snapshots"]
+        REVIEWS["match_reviews"]
+        METRICS["metrics"]
+    end
+
+    WORLD --> SERVICES
+    ODDSAPI --> SERVICES
+    FOTMOBAPI --> SERVICES
+    GEMINI -.-> SERVICES
+
+    SERVICES --> ENGINE
+    SERVICES --> BRACKET
+    SERVICES --> ANALYTICS
+    SERVICES --> SIM
+    JOBS --> SERVICES
+
+    ENGINE --> PREDS
+    SIM --> SNAP
+    ANALYTICS --> REVIEWS
+    ANALYTICS --> METRICS
+```
+
+此架構描述預測引擎內部資料流與模組關係。
+
+核心單場預測由 `engine.py` 完成，奪冠模擬由 `player_level_simulator.py` 執行，背景同步與模擬工作則由 `jobs.py` 管理。
+
+---
+
+## 📂 專案結構
+
+```text
+FIFA-2026-prediction-4.0
+│
+├── frontend
+│   ├── src
+│   │   ├── components
+│   │   │   ├── ChampionshipOdds.jsx
+│   │   │   ├── ModelPerformance.jsx
+│   │   │   ├── NextMatchPredictor.jsx
+│   │   │   └── TournamentBracket.jsx
+│   │   ├── utils
+│   │   ├── App.jsx
+│   │   ├── api.js
+│   │   ├── teams_db.json
+│   │   ├── real_games_results.json
+│   │   ├── simulation_probabilities.json
+│   │   └── match_analyses.json
+│   └── public
+│
+├── backend
+│   ├── app
+│   │   ├── main.py
+│   │   ├── services.py
+│   │   ├── engine.py
+│   │   ├── jobs.py
+│   │   ├── models.py
+│   │   ├── db.py
+│   │   ├── bracket.py
+│   │   ├── analytics.py
+│   │   ├── market.py
+│   │   ├── fotmob.py
+│   │   ├── config.py
+│   │   └── schemas.py
+│   ├── alembic
+│   ├── archive
+│   ├── data
+│   ├── tests
+│   ├── player_level_simulator.py
+│   ├── generate_frontend_data.py
+│   ├── optimize_c1_c2.py
+│   └── sync_real_games.py
+│
+├── pyproject.toml
+├── alembic.ini
+├── render.yaml
+└── README.md
 ```
 
 ---
 
-## 🚀 近期重大優化與更新 (Recent Updates)
+## ⚡ 效能優化
 
-1. **重構「非線性強弱懸殊 Domination 壓制因子」**：4.0 不再直接放大最終 $\lambda$，而是將 70% Normal 比分分布與 30% Domination 分布混合，保留大比分感知並降低強隊過度樂觀。
-2. **重構 LLM 深度解析「批次打包 (Batching)」管線**：將原本「一場比賽呼叫一次 API」的循環架構，改成 10 場對局打包成一個 Batch 統一傳送，大幅降低每日 Gemini API Free Tier 額度消耗。
-3. **實作防禦性延時與 429 重試退避 (Backoff)**：移除所有非同步併發以防 429 限制，改用序列化執行且批次間 sleep 30 秒。針對 429 錯誤加入動態重試機制，可自動解析 API 回傳的 `retryDelay`（或預設 45 秒）並重試最多 3 次。
-4. **補齊缺失的真實球員身價**：針對 FC 26 官方資料庫中轉會至非歐洲主流聯賽的高齡巨星或球員（如 C 羅）身價為 0 或 NaN 的問題，設計基於球員 OVR 指級增長與年齡折損的數據科學 Fallback 估算模型，自動補齊前端顯示空白。
-5. **新增「平局最可能比分 Top 3」**：重構比分過濾排序演算法，除了原有的主勝/客勝 Top 3，同步在主預測板塊、比分詳情彈窗、歷史預測對比與分享圖卡中，新增平局比分（如 `0:0`, `1:1`, `2:2`）的精準過濾與機率呈現。
-6. **全新「詳細機率」統計彈窗**：在歷史預測比對區塊新增「詳細機率」快捷按鈕，可直接開啟「兩隊比數預測機率詳情」面板，細緻呈現雙方主勝、平局、客勝共 30+ 種具體比分的完整機率分布。
-7. **優化 RWD 三欄響應式佈局**：將比分預測區塊從 Flex-wrap 改為全自適應網格排版，桌面端強制三欄並排且平局置中，行動端行動裝置自動向下堆疊，確保在不同解析度下皆對稱美觀。
-8. **修復 Vite Fast Refresh 與熱更新 HMR**：將 `TEAM_TRANSLATIONS` 和 `toTaiwanTime` 從 `App.jsx` 抽離至獨立的 `src/utils/constants.js`。徹底解決了因混合導出造成的 `Could not Fast Refresh` 警告，將開發編譯重載（Reload）速度大幅縮短至 100ms 內。
-9. **解耦「真實賽果同步」與「AI 戰力模擬」**：
-   - **前端解耦雙按鈕**：新增「🔄 同步最新真實賽果」與「🤖 運行 AI 解析與戰力模擬」兩個獨立的觸發點與加載狀態。
-   - **路由獨立化**：於 `vite.config.js` 分流 API。僅更新賽果時調用快速的輕量腳本；需要執行大規模模擬與調用 Gemini 深度解析時才觸發 AI 運算。
-   - **已存在快取跳過 (Cache Skip) 機制**：重構 FotMob 爬蟲邏輯。針對已完賽且已有本地統計數據（stats）的歷史賽事，直接讀取快取並跳過網絡請求，解決了頻繁請求造成的 SSL 握手異常與 API 頻率限制（Rate Limit 429）問題。使日常比分同步的響應速度從原本的數十秒縮短至 **1 ~ 3 秒內**。
-10. **大賽數據 MLE 擬合與防爆冷參數重構**：針對早期版本強隊勝率過高（多元共線性造成強隊通膨）的痛點，導入三大洲際盃賽真實對戰數據。利用 Python 撰寫極大似然估計腳本（`optimize_c1_c2.py`）進行 NLL 敏感度分析，成功將法國對陣塞內加爾等潛在爆冷局的獨贏勝率從 $79\%$ 校正至符合國際大盤風向的 $59\%$，大幅提升小組賽階段的爆冷預測精準度。
+### Monte Carlo Tournament Simulation
 
----
+初始版本：
 
-## 🔮 核心預測模型與演算法詳解 (Model & Algorithm Specifications)
-
-本系統的預測引擎以 Python 為**唯一模型來源**；React 只顯示 FastAPI 回傳結果，因此不再存在跨語言公式漂移。以下為預測模型的完整數學公式與演算細節：
-
-### 1. 球員級屬性實力指標 (Player-Level PQS)
-
-我們從 EA Sports FC 26 的全球數據庫（18,000+ 球員）中，根據 nationality 篩選球員：
-- **26 人大名單篩選**：
-  - **守門員**：選擇整體評分（Overall, OVR）最高的前 3 名守門員進入大名單。
-  - **野戰球員**：按 Overall 降序排序，選擇前 23 名球員補齊。
-  - **虛擬球員生成**：若該國真實球員人數不足 26 人（如捷克、波赫、維德角等），系統會根據該國現有真實球員的 OVR 平均值，加上隨機噪聲 $\epsilon \in [-3, 2]$ 自動生成虛擬球員補齊，其身價估值公式為：
-    $$\text{Value} = \max\left(10^4, \left(\frac{\text{OVR}_{\text{final}}}{70.0}\right)^8 \times 10^6\right) \text{ EUR}$$
-  - **真實球員身價 Fallback 估算**：針對 FC 26 原始數據庫中，部分效力於非歐洲主流聯賽的巨星或球員身價記為 0/NaN 的情況（如 C 羅），本系統導入基於年齡折損的 Fallback 估值公式自動補齊：
-    $$\text{Value}_{\text{fallback}} = \max\left(10^4, \left(\frac{\text{OVR}}{70}\right)^{7.8} \times 10^6\right) \times \text{Age Factor} \text{ EUR}$$
-    其中 $\text{Age Factor}$ 為年齡調節係數：
-    * 若 $\text{Age} > 29$：$\text{Age Factor} = \max(0.05, 1.0 - (\text{Age} - 29) \times 0.12)$
-    * 若 $\text{Age} < 21$：$\text{Age Factor} = 0.9 + (21 - \text{Age}) \times 0.05$
-    * 其餘黃金年齡區間：$\text{Age Factor} = 1.0$
-
-- **球員效率得分 (Player Efficiency Score)**：將球員的 100 分制 Overall 映射到 $[0.01, 0.49]$ 的實力區間：
-  $$\text{Efficiency Score} = \max\left(0.01, \frac{\text{OVR} - 50}{100.0}\right)$$
-
-- **先發評分 (Starting PQS)**：大名單前 11 人（先發陣容）的 Player Efficiency Score 平均值。
-- **板凳評分 (Bench PQS)**：第 12 至第 26 名球員（替補陣容）的 Player Efficiency Score 平均值。
-- **攻防拆分 PQS**：
-  - **進攻評分 ($\text{att-pqs}$)**：先發陣容中，位置為 `FW` (前鋒) 或 `MF` (中場) 的球員，其 Player Efficiency Score 平均值。
-  - **防守評分 ($\text{def-pqs}$)**：先發陣容中，位置為 `DF` (後衛) 或 `GK` (守門員) 的球員，其 Player Efficiency Score 平均值。
-
----
-
-### 2. 賽前傷停名單排除與板凳自動遞補 (Player Injury Exclusion & Backup Rotation)
-
-為解決大語言模型（LLM）連網抓取傷病資訊所造成的高昂 API Token 消耗，本專案直接透過純代碼爬蟲從 FotMob API 的 `matchDetails` 接口自動抓取最新名單：
-- **賽前傷停採集**：每次同步真實賽果時，針對近 3 天內即將進行的未來賽事，爬蟲會解析 `content.lineup.homeTeam.unavailable` 與 `content.lineup.awayTeam.unavailable`，提取狀態為受傷（`injury`）或禁賽（`suspension`）的球員名單並寫入本地 JSON 資料庫中。
-- **主力受傷剔除與板凳自動遞補**：
-  當 Python 預測引擎讀取該國大名單時，會比對該場對局的傷兵名單：
-  * 受傷球員的球員效率得分直接歸零：
-    $$\text{Efficiency Score}_{\text{injured}} = 0.0$$
-  * 系統會將大名單中剩下的健康球員（Active Players）重新依效率評分降序排序，由板凳中實力評分最高且位置相符的球員**自動遞補進入先發前 11 人**。
-  * 重新計算後的先發攻防評分 $\text{att-pqs}_{\text{active}}$、$\text{def-pqs}_{\text{active}}$，以及受傷扣減後的替補評分 $\text{bench-pqs}_{\text{active}}$ 將直接作為本場比賽實戰數據。這會自然地折損該隊伍戰力，並考驗其板凳深度。
-- **名單 UI 傷退置灰標記**：
-  在「下一場比賽預測」看板會顯示傷缺名單；同時「小組國家大名單彈窗」中，若球員即將在下一場比賽缺陣，名字旁會標記紅色 `🤕 傷退` 並以 `55% 透明度（置灰）` 呈現，大幅強化了戰術真實性。
-
----
-
-### 3. 動態疲勞衰減與板凳深度折損 (Dynamic Fatigue & Rotation)
-
-在大賽中，球員體力會隨著每場比賽密集流失，影響期望實力：
-- 每隊初始疲勞度 $f = 0.0$。
-- 每踢完一場比賽，疲勞度累加：
-  $$\Delta f = 0.04 \times (1.0 - \text{Bench PQS}) + (\text{若經歷延長賽額外 } +0.02)$$
-  *板凳深度評分 (`Bench PQS`) 越佳的國家隊，每場累積疲勞的速度越慢，體現了板凳輪換的戰略價值。*
-- 下一場對戰時，球隊的 PQS 與 ELO 會進行乘積折損：
-  $$\text{att-pqs}_{\text{active}} = \text{att-pqs} \times (1.0 - f)$$
-  $$\text{def-pqs}_{\text{active}} = \text{def-pqs} \times (1.0 - f)$$
-  $$\text{ELO}_{\text{active}} = \text{FIFA-Points} \times (1.0 - f \times 0.05)$$
-
----
-
-### 4. 東道主優勢 (Host Advantage)
-
-- **東道主主場優勢 (Host Advantage)**：2026 世界盃主辦國為美、加、墨。
-  - 若 Team A 是主辦國而 Team B 不是，則基礎進球期望值 $\text{Base}_A = 1.3$，$\text{Base}_B = 1.1$。
-  - 若 Team B 是主辦國而 Team A 不是，則 $\text{Base}_A = 1.1$，$\text{Base}_B = 1.3$。
-  - 其餘情況（雙方皆為或皆非主辦國），$\text{Base}_A = \text{Base}_B = 1.2$。
-
----
-
-### 5. 進球期望值建模 (Expected Goals Specification)
-
-為解決 ELO 積分與球員 PQS 之間的多元共線性（Multicollinearity）造成的強隊戰力通膨，本系統放棄了早期憑直覺設定的固定分母，改以三大盃賽（Euro 2024, Copa América 2024, AFCON 2025-2026）共 127 場真實大賽高階數據作為訓練集，運行**極大似然估計（MLE, Maximum Likelihood Estimation）**與負對數似然損失（NLL Loss）敏感度分析，擬合出兼顧「長期戰績基本面」與「球員級物理引擎」的**黃金權重參數（$c_1 = 0.75, c_2 = 0.20$）**：
-
-$$\lambda = \max\left(0.2, \text{Base}_A + 0.75 \cdot \left(\frac{\text{ELO}_{A, \text{active}} - \text{ELO}_{B, \text{active}}}{450}\right) + 0.20 \cdot \left(\frac{\text{att-pqs}_{A, \text{active}} - \text{def-pqs}_{B, \text{active}}}{0.3}\right)\right)$$
-
-$$\mu = \max\left(0.2, \text{Base}_B - 0.75 \cdot \left(\frac{\text{ELO}_{A, \text{active}} - \text{ELO}_{B, \text{active}}}{450}\right) + 0.20 \cdot \left(\frac{\text{att-pqs}_{B, \text{active}} - \text{def-pqs}_{A, \text{active}}}{0.3}\right)\right)$$
-
-*註：此黃金比例既能確保 ELO 的強大預測效力，又完美保留了本系統獨創的「球員受傷、大賽疲勞、板凳遞補」等底層物理引擎的干預能力，在數學損失值（Loss）與隨機性間取得了最佳平衡。*
-
-- **非線性強弱懸殊 (Domination) 壓制因子**：
-  在實際比賽中，當強弱兩隊實力差距極度懸殊時，強隊有極高概率展現壓倒性統治力（開出 3-0, 3-1 等大比分）。為此，我們在基礎線性公式之上，加入了非線性的 ELO Domination 壓制因子：
-  設 $\text{ELO}_{\text{diff}} = \text{ELO}_{A, \text{active}} - \text{ELO}_{B, \text{active}}$：
-  * 當 $\text{ELO}_{\text{diff}} > 250$ 時：
-    $$\lambda_{\text{dom}} = \lambda + (\text{ELO}_{\text{diff}} - 250) \times 0.0018$$
-    $$\mu_{\text{dom}} = \max\left(0.15, \mu - (\text{ELO}_{\text{diff}} - 250) \times 0.0005\right)$$
-  * 當 $\text{ELO}_{\text{diff}} < -250$ 時：
-    $$\mu_{\text{dom}} = \mu + (-\text{ELO}_{\text{diff}} - 250) \times 0.0018$$
-    $$\lambda_{\text{dom}} = \max\left(0.15, \lambda - (-\text{ELO}_{\text{diff}} - 250) \times 0.0005\right)$$
-  * 其餘情況：$\lambda_{\text{dom}} = \lambda$，$\mu_{\text{dom}} = \mu$。
-  * Normal 與 Domination 各自生成完整比分矩陣，最後使用 $P_{final}=0.7P_{normal}+0.3P_{dom}$ 並歸一化。*
-
----
-
-### 6. 雙變量泊松分佈與 Dixon-Coles 修正 (Bivariate Poisson & Dixon-Coles)
-
-兩隊比分並非完全獨立的事件，為此本模型引入**協方差變數 $\gamma = 0.08$** 建立雙變量泊松分布。
-設 $\lambda_1 = \lambda - \gamma$，$\lambda_2 = \mu - \gamma$，$\lambda_3 = \gamma$。
-雙方進球為 $X=x$ 與 $Y=y$ 的未修正聯合概率為：
-$$P_{\text{raw}}(X=x, Y=y) = \sum_{k=0}^{\min(x, y)} \frac{\lambda_1^{x-k} e^{-\lambda_1}}{(x-k)!} \frac{\lambda_2^{y-k} e^{-\lambda_2}}{(y-k)!} \frac{\lambda_3^k e^{-\lambda_3}}{k!}$$
-
-由於普通泊松模型傾向於低估「低得分平局」的機率，我們使用 **Dixon-Coles 修正** 對比分矩陣進行補正（修正係數 $\rho = -0.05$）：
-$$P_{\text{corrected}}(x, y) = P_{\text{raw}}(x, y) \times \tau(x, y)$$
-
-其中修正參數 $\tau(x, y)$ 定義如下：
-- 當 $x=0, y=0$：$\tau(0, 0) = 1 - \rho \lambda \mu$
-- 當 $x=1, y=1$：$\tau(1, 1) = 1 - \rho$
-- 當 $x=1, y=0$：$\tau(1, 0) = 1 + \rho \mu$
-- 當 $x=0, y=y$：$\tau(0, 1) = 1 + \rho \lambda$
-- 其它比分：$\tau(x, y) = 1.0$
-
----
-
-### 7. 貝氏大盤勝率融合 (Bayesian Odds Fusion)
-
-當存在 The Odds API 的完整 1X2 賠率時，每家莊家的隱含機率會先個別去水，再取中位數形成市場共識。參考融合值為：
-
-$$P_{fused}(o)=0.7P_{model}(o)+0.3P_{market}(o),\quad o\in\{W_A,D,W_B\}$$
-
-比分矩陣依所屬 1X2 結果按比例縮放，使各結果加總等於 $P_{fused}(o)$，同時保留該結果內部的比分相對形狀。首頁仍以 $P_{model}$ 為主值，$P_{fused}$ 只作外部證據。
-
----
-
-### 8. 即時更新 ELO 戰力指標 (Dynamic ELO Updates)
-
-每一場完賽（不論是真實已完賽，還是在 10,000 次蒙地卡羅模擬中），都會「即時更新」雙方的 ELO 積分，模擬「爆冷氣勢崩盤」或「黑馬連勝」的動態效應：
-- **世界盃決賽圈 K-Factor**：$K = 60$（最高權重係數）。
-- **預期得分 (Expected Score)**：
-  $$E_A = \frac{1}{10^{\frac{\text{ELO}_B - \text{ELO}_A}{400}} + 1}$$
-  $$E_B = 1 - E_A$$
-- **實質結果 (Actual Score)**：
-  - 若 Team A 獲勝：$S_A = 1.0, S_B = 0.0$
-  - 若雙方打平：$S_A = 0.5, S_B = 0.5$
-  - 若 Team B 獲勝：$S_A = 0.0, S_B = 1.0$
-- **ELO 更新公式**：
-  $$\text{ELO}_{A, \text{new}} = \text{ELO}_A + K \times (S_A - E_A)$$
-  $$\text{ELO}_{B, \text{new}} = \text{ELO}_b + K \times (S_B - E_B)$$
-
----
-
-### 9. PK 大戰門將 vs 射手屬性對戰 (GK OVR vs Shooters in Penalty Shootout)
-
-淘汰賽常規與延長賽打平後進入點球大戰，本系統捨棄了 50/50 隨機碰運氣的設計，改由屬性決定勝負：
-- **守門員實力 ($GK_{\text{OVR}}$)**：提取先發陣容中 `overall` 最高者作為點球 GK，若無則預設為 60。
-- **射手平均實力 ($Shoot_{\text{OVR}}$)**：提取除門將外 `overall` 前 5 高的球員平均值。
-- **罰進機率**（限制在 $[0.55, 0.90]$ 區間內）：
-  $$\text{rate}_A = 0.75 + \frac{\text{Shoot}_{\text{OVR}, A} - \text{GK}_{\text{OVR}, B}}{200}$$
-  $$\text{rate}_B = 0.75 + \frac{\text{Shoot}_{\text{OVR}, B} - \text{GK}_{\text{OVR}, A}}{200}$$
-- **模擬規則**：首輪雙方各罰 5 球。若依然平手，則進入「驟死賽（Sudden Death）」，直到分出勝負。
-
----
-
-### 10. 真實數據與 FotMob API + Fallback 混合機制
-
-- **優先採用真實數據**：系統在顯示或計算已結束比賽時，會優先檢測是否存在由 FotMob API 自動爬取寫入的高階數據（控球率、射門次數、犯規次數）。
-- **Fallback 物理引擎**：若 FotMob API 數據缺失（如網路問題、超時或尚未開賽），則採用 Fallback 機制，根據雙方實力 PQS 與真實比分動態計算高階數據，防止數據寫死為 50/50：
-  - **控球率計算**：
-    $$\text{Possession}_A = \max\left(30, \min\left(70, 50 + (\text{avgPQS}_A - \text{avgPQS}_B) \times 100 + \text{GoalDiff} \times 2 + \epsilon\right)\right)$$
-    where $\epsilon$ 為 $\pm 4\%$ 的隨機噪聲。
-  - **射門次數與犯規次數**：基於控球比例與進球數進行隨機泊松抽樣生成，完美還原場上的攻防情境。
-
----
-
-## 💡 數據演進與研發心路歷程 (Data Evolution & Rationale)
-
-在專案開發過程中，我們曾經歷了關鍵的數據選取變革：
-
-### 🚫 聯賽真實統計數據的困境
-在初期，我們嘗試使用球員在俱樂部聯賽的歷史統計（如賽季進球、助攻、傳球）。但這帶來兩個無法克服的痛點：
-1. **中下游國家隊數據殘缺**：如捷克、波赫、維德角等隊伍的球員散落於全球二三線聯賽，面臨嚴重的數據缺失。之前版本被迫使我們在小組賽中採用「輪空判負 (0:3)」的生硬邏輯 bypass，破壞了 48 強賽程的完整性。
-2. **跨聯盟比較偏誤**：不同國家的球員在完全不同的聯盟與賽制中踢球（如英超 vs 日職聯）。各聯賽的競技強度不同，無法公允地把「日職聯進 15 球的前鋒」與「英超進 10 球的前鋒」放在同一個基準線上對比。
-
-### 💡 轉向官方遊戲數據 (EA Sports FC 26)
-為了獲得公允的全球球員基準線，我們改用最新的 **EA Sports FC 26 資料庫**：
-- **標準化全球評級**：EA 擁有龐大的全球球探體系，使用同一套標準（Overall, Attributes）對 18,000+ 球員進行全方位定性與定量評分，提供了唯一可行的**公允基準線**。
-- **解鎖 48 強全陣容**：基於最新的 FC 26 數據，我們完整補齊了 48 支參賽隊伍的所有大名單，**100% 還原真實世界 Wikipedia 抽籤分組**，並完全移除了輪空判負的代碼！
-
----
-
-## 📂 專案目錄結構
-
-- `backend/`
-  - `app/` - Predictor 4.0 FastAPI、單一預測引擎、資料來源、回測、工作與持久化服務
-  - `alembic/` - SQLite schema migrations
-  - `FC26_20250921.csv` - 最新版 EA Sports FC 26 全球球員數據庫 (核心數據)
-  - `generate_frontend_data.py` - 前端數據生成器 (解析 CSV 並產生 `teams_db.json`)
-  - `optimize_c1_c2.py` - 基於真實大賽數據的極大似然估計（MLE）與損失函數敏感度分析腳本 (演算法調校核心)
-  - `player_level_simulator.py` - Python 蒙地卡羅 10,000 次模擬器核心
-  - `sync_real_games.py` - FotMob 真實數據同步爬蟲管線
-- `frontend/`
-  - `src/App.jsx` - API 狀態、背景工作進度與 4.0 導覽
-  - `src/components/NextMatchPredictor.jsx` - 純 API 顯示的預測、風險、市場與比數 UI
-  - `src/components/ModelPerformance.jsx` - 回測、校準與效能監控
-  - `src/utils/constants.js` - 國家中文對照表與時間轉換工具庫 (解決 HMR 衝突)
-  - `src/teams_db.json` - 包含 48 隊 26 人大名單 of JSON 數據庫
-  - `src/real_games_results.json` - 真實世界比賽結果與高階數據
-
----
-
-## 🚀 快速開始 (Quick Start)
-
-### 1. 數據與模擬驗證
-於根目錄下執行：
-```bash
-# 1. 重新生成前端所需 JSON 資料庫
-python3 backend/generate_frontend_data.py
-
-# 2. 執行 Python 10,000 次蒙地卡羅模擬
-python3 backend/player_level_simulator.py
+```text
+10,000 次模擬
+≈ 1444 秒
 ```
 
-### 2. 啟動 React 前端對陣圖網頁
-於 `frontend` 目錄下執行：
-```bash
-cd frontend
-npm install
-npm run dev
+第一階段優化：
+
+```text
+10,000 次模擬
+≈ 691 秒
 ```
-啟動後在瀏覽器開啟 `http://localhost:5173/` (或對應埠口) 即可體驗高互動性的 2026 世界盃動畫對陣圖與球員大名單面板！
+
+改善幅度：
+
+```text
+約 52%
+約 2.1x 加速
+```
+
+主要優化：
+
+- Real Games Lookup Index
+- PMF Cache
+- Matrix Reuse
+- Active PQS Cache
+
+第二階段優化：
+
+```text
+10,000 次模擬
+≈ 463 秒
+```
+
+額外改善：
+
+```text
+約 33.9%
+```
+
+最終總改善：
+
+```text
+1444 秒 → 463 秒
+
+約 67.9% 改善
+約 3.1x 加速
+```
+
+---
+
+### 第一階段優化內容
+
+#### Real Games Lookup Index
+
+- 建立一次比賽索引
+- 同時建立正向與反向 lookup key
+- 保留 unavailable players 原本資料順序
+- 避免大量線性搜尋
+
+#### PMF Cache
+
+- 預先快取 Poisson PMF
+- score_matrix() 改為查表組合
+- 不改變模型公式與結果
+
+#### Matrix Reuse
+
+- Normal 與 Domination rates 相同時重用 matrix
+- 避免重複建立比分矩陣
+
+#### Active PQS Cache
+
+- Tournament run 建立獨立 cache
+- 快取基礎 PQS 計算結果
+- 疲勞修正仍維持動態計算
+
+---
+
+### 第二階段優化內容
+
+- Snapshot Cache
+- Compact Probability Matrix
+- Fused Mix + Sampling
+- Simulation Pipeline 精簡
+
+---
+
+## 📈 核心功能
+
+### 比賽預測
+
+- 勝平負機率
+- 預測比分
+- 信心等級
+- 爆冷風險分析
+
+### 奪冠模擬
+
+- 奪冠機率
+- 晉級機率
+- 淘汰賽路徑分析
+- 熱門球隊比較
+
+### 賽後檢討
+
+- 預測 vs 實際比分
+- 機率排名
+- 意外程度分析
+- 模型觀察
+
+---
+
+## 🔮 未來規劃
+
+- 小組賽階段模型表現分析
+- 淘汰賽階段模型表現分析
+- 自動生成賽事報告
+- 模型版本比較
+- 長期預測回測系統
+- AI 賽事解讀增強
+- PostgreSQL 支援
+- Background Worker 架構
+
+---
+
+## 👨‍💻 作者
+
+劉耀升  
+National Taiwan Ocean University  
+Department of Computer Science and Engineering
+
+GitHub：
+
+https://github.com/wilson94624
+
+---
+
+## 📄 License
+
+MIT License
